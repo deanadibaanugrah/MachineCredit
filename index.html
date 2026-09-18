@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MachineCredit — The Machine Economy Protocol</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- =======================================================
+     NAVIGATION
+======================================================== -->
+<nav class="nav" id="landingNavbar">
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <span class="brand-mark">M</span>
+      <span>MachineCredit</span>
+    </a>
+
+    <div class="landing-nav-right">
+      <div class="nav-links">
+        <a href="#problem">Product</a>
+        <a href="#how">How it works</a>
+        <a href="#machines">Machines</a>
+        <a href="#protocol">Protocol</a>
+        <a href="#docs">Docs</a>
+      </div>
+      <div class="nav-right">
+        <a href="app.html" class="btn btn-dark">Launch App</a>
+      </div>
+    </div>
+
+    <div class="app-nav-right">
+      <div class="app-nav-links">
+        <button class="app-nav-link active" onclick="showDiscover()">Discover</button>
+        <button class="app-nav-link" onclick="showToast('Portfolio page will be added in the next MVP step')">Portfolio</button>
+        <button class="app-nav-link" onclick="openLaunchModal()">Launch Robot</button>
+      </div>
+
+      <label class="app-search">
+        <span>⌕</span>
+        <input id="machineSearch" type="search" placeholder="Search machines..." oninput="filterMachines(this.value)">
+      </label>
+
+      <button class="app-notification" onclick="showToast('No new notifications')">♢</button>
+
+      <div class="chain-pill"><span class="green-dot"></span>BOT Chain</div>
+
+      <button class="site-wallet-btn" onclick="showToast('Wallet connection is a demo in this MVP')">
+        <img src="asset/logo-wallet.png" alt="Wallet">
+        Connect Wallet
+      </button>
+
+      <div class="site-profile">IK</div>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- =======================================================
+     HERO
+======================================================== -->
+<section class="container hero">
+  <div class="hero-copy">
+    <div class="eyebrow">THE MACHINE ECONOMY PROTOCOL</div>
+
+    <h1>
+      Turn machine performance
+      <span>into capital</span>
+    </h1>
+
+    <p class="hero-lead">
+      MachineCredit enables robot and machine companies to unlock financing
+      from verified machine performance and revenue, with financing agreements
+      settled onchain.
+    </p>
+
+    <div class="hero-actions">
+      <a href="app.html" class="btn btn-dark">Launch App →</a>
+      <a href="#how" class="btn btn-white">Learn More ↓</a>
+    </div>
+
+    <div class="hero-proof">
+      <span class="built-chain">
+        <span class="green-dot"></span>
+        Built on
+        <img src="asset/logo-botchain.png" alt="BOT Chain" class="botchain-logo">
+      </span>
+      <span>Performance data <strong style="color:var(--ink)">simulated</strong> for this MVP.</span>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="tech-grid"></div>
+
+    <!-- IMAGE SLOT: replace .placeholder-box with real robot image later -->
+    <div class="hero-image-slot">
+
+      <!-- Soft blue ground / surface -->
+      <div class="robot-ground"></div>
+
+      <!-- Robot -->
+      <img
+        src="asset/robot-arm.png"
+        alt="Industrial robotic arm"
+        class="real-image"
+      >
+
+      <!-- Reflection -->
+      <img
+        src="asset/robot-arm.png"
+        alt=""
+        aria-hidden="true"
+        class="robot-reflection"
+      >
+
+    </div>
+
+    <div class="data-tag tag-performance">
+      <small>Performance</small>
+      <strong>96%</strong>
+
+      <div class="mini-bars">
+        <i style="height:25%"></i>
+        <i style="height:38%"></i>
+        <i style="height:32%"></i>
+        <i style="height:52%"></i>
+        <i style="height:68%"></i>
+        <i style="height:82%"></i>
+        <i style="height:100%"></i>
+      </div>
+    </div>
+
+    <div class="data-tag tag-revenue">
+      <small>Monthly revenue</small>
+      <strong>$10,000</strong>
+
+      <svg class="mini-line" viewBox="0 0 150 45" preserveAspectRatio="none">
+        <polyline
+          points="2,37 22,31 40,34 58,24 77,28 96,16 116,20 135,9 148,4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </div>
+
+    <div class="data-tag tag-share">
+      <small>Revenue share</small>
+
+      <div class="share-value">
+        <strong>20%</strong>
+        <div class="mini-pie"></div>
+      </div>
+    </div>
+
+    <div class="onchain">
+      <span class="green-dot"></span>ON-CHAIN · VERIFIED
+    </div>
+  </div>
+</section>
+
+<!-- =======================================================
+     PROBLEM
+     NOTE: Partner/logo strip intentionally removed.
+======================================================== -->
+<section class="section reveal" id="problem">
+  <div class="container problem">
+    <div>
+      <div class="kicker">THE PROBLEM</div>
+
+      <h2>
+        Machines generate value.
+        But traditional finance doesn't understand them.
+      </h2>
+
+      <p class="copy">
+        Robots and machines create real revenue, but they lack portable
+        financial history that traditional lenders can use. As a result,
+        productive machines remain undercapitalized.
+      </p>
+
+      <div class="points">
+        <div class="point">
+          <span class="point-num">01</span>
+          <p>No financial history</p>
+        </div>
+        <div class="point">
+          <span class="point-num">02</span>
+          <p>Hard to verify performance</p>
+        </div>
+        <div class="point">
+          <span class="point-num">03</span>
+          <p>Limited access to capital</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMAGE SLOT -->
+    <div class="problem-image">
+      <img
+        src="asset/warehouse-amr.png"
+        alt="Autonomous warehouse robot"
+        class="real-image"
+      >
+    </div>
+  </div>
+</section>
+
+<!-- =======================================================
+     HOW IT WORKS
+======================================================== -->
+<section class="section reveal" id="how">
+  <div class="container">
+    <div class="how-head">
+      <div class="kicker">HOW IT WORKS</div>
+
+      <h2>
+        From machine performance
+        to programmable finance.
+      </h2>
+
+      <p class="copy">
+        MachineCredit converts machine performance and revenue into an
+        onchain financing agreement — transparent, programmable, and global.
+      </p>
+    </div>
+
+    <div class="steps">
+      <article class="step">
+        <div class="step-index">01</div>
+        <h3>Verify Performance</h3>
+        <p>Machine performance and revenue are recorded for financing decisions.</p>
+      </article>
+
+      <article class="step">
+        <div class="step-index">02</div>
+        <h3>Create Financing</h3>
+        <p>Lenders fund machines with a predefined revenue-share agreement.</p>
+      </article>
+
+      <article class="step">
+        <div class="step-index">03</div>
+        <h3>Onchain Settlement</h3>
+        <p>The financing agreement is executed through a BOT Chain smart contract.</p>
+      </article>
+
+      <article class="step">
+        <div class="step-index">04</div>
+        <h3>Shared Revenue</h3>
+        <p>Revenue is distributed according to the financing agreement.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =======================================================
+     FEATURED MACHINE
+======================================================== -->
+<section class="section machine-section reveal" id="machines">
+  <div class="container featured">
+
+    <div class="machine-copy">
+      <div class="kicker">FEATURED MACHINE</div>
+
+      <h2>Warehouse Robot #002</h2>
+
+      <div class="machine-meta">
+        RBT-002 &nbsp;·&nbsp; AUTONOMOUS FORKLIFT
+      </div>
+
+      <p class="copy">
+        A next-generation warehouse robot designed for high-efficiency
+        logistics operations. With consistent performance and recurring
+        revenue, RBT-002 is open for financing.
+      </p>
+
+      <a href="#" class="machine-link">
+        View details <span>→</span>
+      </a>
+    </div>
+
+    <div>
+      <!-- IMAGE SLOT -->
+      <div class="machine-image">
+        <img
+          src="asset/rbt-002.png"
+          alt="RBT-002 autonomous warehouse forklift"
+          class="real-image"
+        >
+      </div>
+
+      <div class="machine-metrics">
+
+        <!-- PERFORMANCE -->
+        <div class="metric">
+          <div class="metric-content">
+            <div class="metric-info">
+              <small>Performance</small>
+              <strong>96%</strong>
+            </div>
+
+            <div class="metric-chart metric-bars">
+              <i style="height:25%"></i>
+              <i style="height:38%"></i>
+              <i style="height:32%"></i>
+              <i style="height:52%"></i>
+              <i style="height:68%"></i>
+              <i style="height:82%"></i>
+              <i style="height:100%"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- MONTHLY REVENUE -->
+        <div class="metric">
+          <div class="metric-content">
+            <div class="metric-info">
+              <small>Monthly Revenue</small>
+              <strong>$10,000</strong>
+            </div>
+
+            <svg class="metric-line"
+                viewBox="0 0 100 45"
+                preserveAspectRatio="none">
+              <polyline
+                points="2,37 15,31 28,34 40,24 53,28 66,16 78,20 90,9 98,4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <!-- REVENUE SHARE -->
+        <div class="metric">
+          <div class="metric-content">
+            <div class="metric-info">
+              <small>Revenue Share</small>
+              <strong>20%</strong>
+            </div>
+
+            <div class="metric-pie"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =======================================================
+     PROTOCOL
+======================================================== -->
+<section class="section reveal" id="protocol">
+  <div class="container protocol">
+
+    <div>
+      <div class="kicker">THE PROTOCOL</div>
+
+      <h2>A financial layer for the machine economy.</h2>
+
+      <p class="copy">
+        MachineCredit connects productive machines with capital through
+        verifiable performance, programmable financing, and onchain settlement.
+      </p>
+
+      <a href="#docs" class="btn btn-white" style="display:inline-block;margin-top:27px;">
+        Read the Docs →
+      </a>
+    </div>
+
+    <div class="protocol-card">
+      <div class="kicker">MACHINE → CREDIT</div>
+
+      <div class="protocol-flow">
+
+        <div class="flow-row">
+          <div class="flow-box">
+            <div class="flow-label">Machine</div>
+            <div class="flow-value">RBT-002 · 96%</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box">
+            <div class="flow-label">Revenue</div>
+            <div class="flow-value">$10,000 / month</div>
+          </div>
+        </div>
+
+        <div style="height:22px;border-left:1px dashed #c9d7e9;margin-left:50%;"></div>
+
+        <div class="flow-row">
+          <div class="flow-box">
+            <div class="flow-label">Financing</div>
+            <div class="flow-value">0.01 BOT</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box">
+            <div class="flow-label">Revenue Share</div>
+            <div class="flow-value">20% → Lender</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =======================================================
+     CTA
+     Globe image intentionally left as an empty slot.
+======================================================== -->
+<section class="container cta reveal" id="docs">
+  <div class="cta-box">
+
+    <!-- IMAGE SLOT: Replace placeholder with future globe image -->
+    <div class="cta-globe-slot">
+      <img
+        src="asset/machine-globe.png"
+        alt="Global machine economy"
+        class="cta-globe-image"
+      >
+    </div>
+
+    <div class="cta-content">
+      <div class="kicker">BE PART OF THE MACHINE ECONOMY</div>
+
+      <h2>
+        Machines are becoming economic actors.
+        Help finance what comes next.
+      </h2>
+
+      <p class="copy">
+        Explore the MachineCredit MVP and see how machine revenue can move
+        through programmable finance.
+      </p>
+
+      <div class="cta-actions">
+        <a href="app.html" class="btn btn-dark">Launch App →</a>
+        <a href="#docs" class="btn btn-white">Read the Docs</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+
+      <div>
+        <a href="#" class="brand">
+          <span class="brand-mark">M</span>
+          <span>MachineCredit</span>
+        </a>
+
+        <p class="footer-desc">
+          Infrastructure for financing productive machines through verified performance and programmable finance.
+        </p>
+      </div>
+
+
+      <div>
+        <h4>Resources</h4>
+        <a href="#docs">Docs</a>
+      </div>
+
+      <div>
+        <h4>Network</h4>
+        <a href="#">BOT Chain</a>
+        <a href="#">Explorer</a>
+      </div>
+
+      <div>
+        <h4>Community</h4>
+        <a href="#">X / Twitter</a>
+        <a href="#">Discord</a>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 MachineCredit. All rights reserved.</span>
+
+      <span class="footer-network">
+        <span class="green-dot"></span>
+        Built on <img src="asset/logo-botchain.png" alt="BOT Chain" class="botchain-logo">
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

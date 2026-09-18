@@ -1,0 +1,17 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test:blockchain": "node src/test.js"
+  },
+  "dependencies": {
+    "cors": "...",
+    "dotenv": "...",
+    "ethers": "...",
+    "express": "..."
+  },
+  "devDependencies": {
+    "nodemon": "..."
+  }
+}

@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MachineCredit — Discover</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .app-wallet-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .wallet-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 180px;
+      background: #0e1522;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+      padding: 6px;
+      display: none;
+      z-index: 50;
+    }
+
+    .wallet-menu.active {
+      display: block;
+    }
+
+    .wallet-menu-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: #e6ebf3;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .wallet-menu-item:hover {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .wallet-menu-item-danger {
+      color: #ff6b6b;
+    }
+  </style>
+</head>
+<body class="app-page">
+
+<nav class="app-nav">
+  <div class="app-nav-inner">
+    <a href="index.html" class="app-brand">
+      <span class="brand-mark">M</span>
+      <span>MachineCredit</span>
+    </a>
+
+    <div class="app-tabs">
+      <button class="app-tab active" data-view="discover" onclick="showView('discover')">Discover</button>
+      <button class="app-tab" data-view="portfolio" onclick="showView('portfolio')">Portfolio</button>
+      <button class="app-tab" data-view="launch" onclick="showView('launch')">Launch Robot</button>
+      <button class="app-tab" data-view="settlement" onclick="showView('settlement')">Deposit Revenue</button>
+    </div>
+
+    <div class="app-nav-spacer"></div>
+
+    <label class="app-search">
+      <span>⌕</span>
+      <input id="machineSearch" type="search" placeholder="Search machines..." oninput="filterMachines(this.value)">
+    </label>
+
+    <button class="app-icon-btn" onclick="toggleNotifications()" aria-label="Notifications">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+        <path d="M10 21h4"></path>
+      </svg>
+    </button>
+
+        <div class="notification-panel" id="notificationPanel">
+      <div class="notification-head">Recent Notifications</div>
+      <div class="notification-item">
+        <span>No notifications yet</span>
+      </div>
+    </div>
+
+    <div class="app-network">
+      <span class="green-dot"></span>
+      BOT Chain
+    </div>
+
+    <div class="app-wallet-wrap">
+      <button class="app-wallet" onclick="handleWalletButton()">
+        <img src="asset/logo-wallet.png" alt="">
+        <span id="walletLabel">Connect Wallet</span>
+      </button>
+
+      <div class="wallet-menu" id="walletMenu">
+        <button
+          type="button"
+          class="wallet-menu-item"
+          onclick="hideWalletMenu(); switchWallet();"
+        >
+          Switch Wallet
+        </button>
+
+        <button
+          type="button"
+          class="wallet-menu-item wallet-menu-item-danger"
+          onclick="hideWalletMenu(); disconnectWallet();"
+        >
+          Disconnect
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="app-main">
+
+  <!-- ========================= DISCOVER ========================= -->
+  <section id="view-discover" class="app-view active">
+
+    <div class="app-page-head">
+      <div>
+        <h1>We power the machine economy</h1>
+        <p>For Machine Operators, Fleet Owners, and Capital Providers</p>
+      </div>
+    </div>
+
+    <div class="app-stats">
+      <div class="app-stat">
+        <div class="app-stat-icon">▥</div>
+        <div>
+          <small>Machines Listed</small>
+          <strong id="totalMachines">—</strong>
+        </div>
+      </div>
+      <div class="app-stat">
+        <div class="app-stat-icon">$</div>
+        <div>
+          <small>Revenue Settled (30d)</small>
+          <strong id="monthlyRevenue">—</strong>
+        </div>
+      </div>
+      <div class="app-stat">
+        <div class="app-stat-icon">◉</div>
+        <div>
+          <small>Open Financing</small>
+          <strong id="openFinancing">—</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="discover-market-layout">
+
+  <!-- LEFT: MACHINE MARKET -->
+  <div class="machine-market-column">
+
+    <div id="market" class="catalog-head">
+
+      <div>
+        <h2>Open for financing</h2>
+        <p>Machines currently available for capital.</p>
+      </div>
+
+      <div class="catalog-tools">
+        <button class="filter-btn active" onclick="setFilter(this,'all')">
+          All
+        </button>
+
+        <button class="filter-btn" onclick="setFilter(this,'forklift')">
+          Forklift
+        </button>
+
+        <button class="filter-btn" onclick="setFilter(this,'amr')">
+          AMR
+        </button>
+
+        <button class="filter-btn" onclick="setFilter(this,'arm')">
+          Robotic Arm
+        </button>
+      </div>
+
+    </div>
+
+
+    <div class="machine-catalog" id="machineCatalog">
+
+  <article class="machine-card" data-type="forklift" data-machine-id="RBT-002">
+    <div class="machine-photo">
+      <img src="asset/rbt-002.png" alt="RBT-002 Autonomous Forklift">
+      <div class="machine-status">
+        <span class="status-dot"></span>
+        Open for financing
+      </div>
+    </div>
+
+    <div class="machine-card-body">
+      <div class="machine-card-title">RBT-002</div>
+      <div class="machine-card-type">AUTONOMOUS FORKLIFT</div>
+
+      <div class="machine-card-metrics">
+        <div class="machine-card-metric">
+          <strong>96%</strong>
+          <span>Performance</span>
+        </div>
+
+        <div class="machine-card-metric">
+          <strong>$10K</strong>
+          <span>Monthly Revenue</span>
+        </div>
+
+        <div class="machine-card-metric">
+          <strong>20%</strong>
+          <span>Revenue Share</span>
+        </div>
+      </div>
+
+      <button
+        class="machine-card-button"
+        onclick="showMachineDetail('RBT-002')">
+        View Details →
+      </button>
+    </div>
+  </article>
+
+
+  <article class="machine-card" data-type="amr" data-machine-id="AMR-001">
+    <div class="machine-photo">
+      <img src="asset/warehouse-amr.png" alt="AMR-001 Autonomous Mobile Robot">
+      <div class="machine-status">
+        <span class="status-dot"></span>
+        Open for financing
+      </div>
+    </div>
+
+    <div class="machine-card-body">
+      <div class="machine-card-title">AMR-001</div>
+      <div class="machine-card-type">AUTONOMOUS MOBILE ROBOT</div>
+
+      <div class="machine-card-metrics">
+        <div class="machine-card-metric">
+          <strong>94%</strong>
+          <span>Performance</span>
+        </div>
+
+        <div class="machine-card-metric">
+          <strong>$7.5K</strong>
+          <span>Monthly Revenue</span>
+        </div>
+
+        <div class="machine-card-metric">
+          <strong>18%</strong>
+          <span>Revenue Share</span>
+        </div>
+      </div>
+
+      <button
+        class="machine-card-button"
+        onclick="showMachineDetail('AMR-001')">
+        View Details →
+      </button>
+    </div>
+  </article>
+
+
+  <article class="machine-card" data-type="arm" data-machine-id="ARM-003">
+    <div class="machine-photo">
+      <img src="asset/robot-arm.png" alt="ARM-003 Industrial Robotic Arm">
+      <div class="machine-status">
+        <span class="status-dot"></span>
+        Open for financing
+      </div>
+    </div>
+
+    <div class="machine-card-body">
+      <div class="machine-card-title">ARM-003</div>
+      <div class="machine-card-type">INDUSTRIAL ROBOTIC ARM</div>
+
+      <div class="machine-card-metrics">
+        <div class="machine-card-metric">
+          <strong>97%</strong>
+          <span>Performance</span>
+        </div>
+
+        <div class="machine-card-metric">
+          <strong>$12K</strong>
+          <span>Monthly Revenue</span>
+        </div>
+
+        <div class="machine-card-metric">
+          <strong>22%</strong>
+          <span>Revenue Share</span>
+        </div>
+      </div>
+
+      <button
+        class="machine-card-button"
+        onclick="showMachineDetail('ARM-003')">
+        View Details →
+      </button>
+    </div>
+  </article>
+
+</div>
+
+  </div>
+
+
+  <!-- RIGHT: RECENT ACTIVITY -->
+  <div class="app-panel">
+
+    <div class="app-panel-head">
+      <div>
+        <h3>Recent network activity</h3>
+        <p>Latest machine, verification and financing events.</p>
+      </div>
+    </div>
+
+    <div class="activity">
+
+      <div class="activity-row">
+        <div class="activity-main">
+          <strong>RBT-002 financing opened</strong>
+          <span>Autonomous Forklift · 2 min ago</span>
+        </div>
+        <div class="activity-value">$50,000</div>
+      </div>
+
+      <div class="activity-row">
+        <div class="activity-main">
+          <strong>AMR-001 performance verified</strong>
+          <span>Performance score updated · 18 min ago</span>
+        </div>
+        <div class="activity-value">94%</div>
+      </div>
+
+      <div class="activity-row">
+        <div class="activity-main">
+          <strong>ARM-003 revenue recorded</strong>
+          <span>Monthly revenue attested · 42 min ago</span>
+        </div>
+        <div class="activity-value">$12,000</div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+  </section>
+
+  <!-- ========================= DETAIL ========================= -->
+  <section id="view-detail" class="app-view">
+
+    <button class="back-link" onclick="showView('discover')">← Back to Discover</button>
+
+    <div class="detail-layout">
+
+      <div class="detail-card">
+        <div class="detail-head">
+          <div>
+            <h1 class="detail-title" id="detailName">RBT-002</h1>
+            <div class="detail-meta" id="detailType">AUTONOMOUS FORKLIFT · BOT CHAIN</div>
+          </div>
+          <div class="detail-badge">● VERIFIED</div>
+        </div>
+
+        <div class="detail-stats">
+          <div class="detail-stat">
+            <small>Performance</small>
+            <strong id="detailPerformance">96%</strong>
+          </div>
+          <div class="detail-stat">
+            <small>Monthly Revenue</small>
+            <strong id="detailRevenue">$10,000</strong>
+          </div>
+          <div class="detail-stat">
+            <small>Uptime</small>
+            <strong id="detailUptime">98.4%</strong>
+          </div>
+          <div class="detail-stat">
+            <small>Jobs / Month</small>
+            <strong id="detailJobs">1,842</strong>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <div class="chart-top">
+            <div class="chart-label">Performance history · 30 days</div>
+            <div class="chart-value" id="detailChartValue">+4.8%</div>
+          </div>
+          <svg class="fake-chart" viewBox="0 0 600 170" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#1769ff" stop-opacity=".16"/>
+                <stop offset="100%" stop-color="#1769ff" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 137 L55 129 L110 132 L165 105 L220 112 L275 83 L330 90 L385 62 L440 72 L495 45 L550 53 L600 27 L600 170 L0 170 Z"
+                  fill="url(#chartFill)"/>
+            <polyline points="0,137 55,129 110,132 165,105 220,112 275,83 330,90 385,62 440,72 495,45 550,53 600,27"
+                      fill="none" stroke="#1769ff" stroke-width="3"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <div class="financing-box">
+          <h4>Financing opportunity</h4>
+          <p class="financing-copy">Capital is provided against machine revenue under a programmable revenue-share agreement.</p>
+
+          <div class="financing-row"><span>Funding target</span><strong id="fundingTarget">$50,000</strong></div>
+          <div class="financing-row">
+            <span>Funded</span>
+            <strong id="totalFunded">$0</strong>
+          </div>
+
+          <div class="funding-progress">
+            <div class="funding-progress-track">
+              <div
+                class="funding-progress-bar"
+                id="fundingProgressBar"
+              ></div>
+            </div>
+
+            <div class="funding-progress-meta">
+              <span id="fundingProgressText">0% funded</span>
+              <span id="fundingRemaining">$0 remaining</span>
+            </div>
+          </div>
+          <div class="financing-row"><span>Revenue share</span><strong id="revenueShare">20%</strong></div>
+          <div class="financing-row"><span>Term</span><strong id="fundingTerm">12 months</strong></div>
+          <div class="financing-row"><span>Expected monthly revenue</span><strong id="expectedRevenue">$10,000</strong></div>
+
+          <div class="investment-form">
+
+            <label for="investmentAmount">
+              Investment amount (USDT)
+            </label>
+
+            <input
+              id="investmentAmount"
+              type="number"
+              min="0.1"
+              step="0.1"
+              value="0.5"
+              placeholder="Enter amount"
+            >
+
+            <button
+              class="btn btn-dark"
+              onclick="fundMachine()"
+            >
+              Invest in Machine →
+            </button>
+
+          </div>
+        </div>
+
+        <div class="verify-box">
+          <small>Performance attestation</small>
+          <strong>Verified machine telemetry</strong>
+          <code>botchain:attestation:8f21...c9a2</code>
+        </div>
+
+        <div class="verify-box">
+          <small>Settlement</small>
+          <strong>Revenue routing enabled</strong>
+          <code>USDT → financing agreement → capital provider</code>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================= PORTFOLIO ========================= -->
+  <section id="view-portfolio" class="app-view">
+
+    <div class="app-page-head">
+      <div>
+        <div class="app-kicker">Your Capital</div>
+        <h1>Portfolio.</h1>
+        <p>Track machines you finance and the revenue generated by your positions.</p>
+      </div>
+    </div>
+
+    <div class="portfolio-summary">
+
+      <div class="portfolio-value">
+        <small>Total capital deployed</small>
+        <strong id="portfolioCapital">$0</strong>
+        <span id="portfolioMachineCount">Across 0 active machines</span>
+      </div>
+
+      <div class="portfolio-stat">
+        <small>Revenue received</small>
+        <strong id="portfolioRevenue">$0</strong>
+      </div>
+
+      <div class="portfolio-stat">
+        <small>Active positions</small>
+        <strong id="portfolioPositions">0</strong>
+      </div>
+
+      <div class="portfolio-stat">
+        <small>Avg. performance</small>
+        <strong id="portfolioPerformance">—</strong>
+      </div>
+
+    </div>
+
+    <div class="app-panel">
+      <div class="app-panel-head">
+        <div>
+          <h3>Your machine positions</h3>
+          <p>On-chain financing agreements connected to your wallet.</p>
+        </div>
+      </div>
+
+      <table class="position-table">
+        <thead>
+          <tr>
+            <th>Machine</th>
+            <th>Capital</th>
+            <th>Revenue Share</th>
+            <th>Revenue Received</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="positionBody">
+          <tr>
+            <td colspan="5" style="text-align:center;padding:40px;color:#8a97a8;">
+              No active positions
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <!-- ========================= REVENUE SETTLEMENT ========================= -->
+  <section id="view-settlement" class="app-view">
+
+    <div class="app-page-head">
+      <div>
+        <div class="app-kicker">REVENUE SETTLEMENT</div>
+        <h1>Route machine revenue onchain.</h1>
+        <p>
+          Revenue generated by financed machines is settled automatically
+          through the financing agreement.
+        </p>
+      </div>
+    </div>
+
+    <div class="revenue-settlement">
+
+      <div class="revenue-settlement-head">
+        <div class="settlement-status">
+          <span class="status-dot"></span>
+          Onchain settlement
+        </div>
+      </div>
+
+      <div class="settlement-content">
+
+                <div class="settlement-machine">
+          <div class="machine-label">Machine</div>
+          <select
+            id="settlementMachineSelect"
+            class="settlement-machine-select"
+            onchange="onSettlementMachineChange()"
+          >
+            <option value="">Loading machines...</option>
+          </select>
+        </div>
+
+        <div class="settlement-share">
+          <div class="machine-label">Revenue split</div>
+          <div class="split-value">
+            <strong id="settlementCompanyShare">80%</strong>
+            <span>Company</span>
+            <strong id="settlementLenderShare">20%</strong>
+            <span>Lenders</span>
+          </div>
+        </div>
+
+        <div class="settlement-action">
+
+          <label for="revenueDepositInput">
+            Revenue generated
+          </label>
+
+          <div class="settlement-input-row">
+
+            <div class="settlement-input">
+              <input
+                id="revenueDepositInput"
+                type="number"
+                min="0.000001"
+                step="0.000001"
+                placeholder="0.00"
+              >
+              <span>USDT</span>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-dark"
+              onclick="depositRevenueFromUI()"
+            >
+              Deposit Revenue →
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ========================= LAUNCH ROBOT ========================= -->
+  <section id="view-launch" class="app-view">
+
+    <div class="app-page-head">
+      <div>
+        <div class="app-kicker">Machine Onboarding</div>
+        <h1>Launch your robot.</h1>
+        <p>Register a productive machine and make its performance available for financing.</p>
+      </div>
+    </div>
+
+    <div class="launch-layout">
+
+      <div class="form-card">
+        <div class="app-kicker">REGISTER MACHINE</div>
+        <h2>Bring machine performance onchain.</h2>
+        <p>
+          Enter the machine's basic operating data. This demo creates a
+          machine listing and adds it to the financing market.
+        </p>
+
+        <form id="launchForm" onsubmit="registerMachine(event)">
+
+          <!-- MACHINE IMAGE -->
+                    <div class="machine-upload">
+            <label for="machineImageInput" class="upload-box" id="uploadBoxLabel">
+              <div class="upload-icon">↑</div>
+              <strong>Drag or search file here</strong>
+              <span>PNG, JPG or WEBP</span>
+            </label>
+
+            <input
+              id="machineImageInput"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              hidden
+              required
+              onchange="handleMachineImageSelected(this)"
+            >
+          </div>
+
+          <div class="form-grid">
+
+            <div class="form-field">
+              <label>Machine ID</label>
+              <input id="machineIdInput" required placeholder="RBT-004">
+            </div>
+
+            <div class="form-field">
+              <label>Machine Type</label>
+              <select id="machineTypeInput">
+                <option value="forklift">Autonomous Forklift</option>
+                <option value="amr">Autonomous Mobile Robot</option>
+                <option value="arm">Industrial Robotic Arm</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Monthly Revenue (USD)</label>
+              <input
+                id="machineRevenueInput"
+                type="number"
+                min="0"
+                required
+                placeholder="10000"
+              >
+            </div>
+
+            <div class="form-field">
+              <label>Performance (%)</label>
+              <input
+                id="machinePerformanceInput"
+                type="number"
+                min="0"
+                max="100"
+                required
+                placeholder="96"
+              >
+            </div>
+
+            <div class="form-field">
+              <label>Uptime (%)</label>
+              <input
+                id="machineUptimeInput"
+                type="number"
+                min="0"
+                max="100"
+                required
+                placeholder="98"
+              >
+            </div>
+
+            <div class="form-field">
+              <label>Funding Target (USD)</label>
+              <input
+                id="machineFundingInput"
+                type="number"
+                min="0"
+                required
+                placeholder="50000"
+              >
+            </div>
+
+            <div class="form-field full">
+              <label>Revenue Share (%)</label>
+              <input
+                id="machineShareInput"
+                type="number"
+                min="1"
+                max="100"
+                value="20"
+                required
+              >
+            </div>
+
+          </div>
+
+          <button type="submit" class="btn btn-dark" style="width:100%;margin-top:20px">
+            Register Machine →
+          </button>
+
+        </form>
+      </div>
+
+      <aside class="launch-info">
+        <h3>What happens next?</h3>
+        <p>Your machine becomes a verifiable financing opportunity instead of an isolated operating asset.</p>
+
+        <div class="launch-steps">
+          <div class="launch-step">
+            <div class="launch-number">01</div>
+            <div>
+              <strong>Machine identity</strong>
+              <span>A unique machine record is created for the listing.</span>
+            </div>
+          </div>
+          <div class="launch-step">
+            <div class="launch-number">02</div>
+            <div>
+              <strong>Performance verification</strong>
+              <span>Telemetry and revenue attestations establish machine history.</span>
+            </div>
+          </div>
+          <div class="launch-step">
+            <div class="launch-number">03</div>
+            <div>
+              <strong>Financing terms</strong>
+              <span>Define funding target, revenue share and repayment period.</span>
+            </div>
+          </div>
+          <div class="launch-step">
+            <div class="launch-number">04</div>
+            <div>
+              <strong>Capital access</strong>
+              <span>Investors can discover the machine and finance its productive capacity.</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    
+
+  </section>
+
+</main>
+
+<!-- ========================= ROLE MODAL ========================= -->
+
+<div class="role-modal" id="roleModal">
+
+  <div class="role-modal-backdrop"></div>
+
+  <div class="role-modal-card">
+
+    <div class="role-modal-icon">
+      M
+    </div>
+
+    <div class="role-modal-kicker">
+      WELCOME TO MACHINECREDIT
+    </div>
+
+    <h2>How will you use MachineCredit?</h2>
+
+    <p>
+      Choose how you participate in the machine economy.
+      You can change accounts anytime through your wallet.
+    </p>
+
+    <div class="role-options">
+
+      <button
+        type="button"
+        class="role-option"
+        onclick="selectRole('company')"
+      >
+
+        <div class="role-option-icon">
+          🏭
+        </div>
+
+        <div class="role-option-content">
+
+          <strong>I'm a Company</strong>
+
+          <span>
+            Register machines and raise capital
+            from financing partners.
+          </span>
+
+        </div>
+
+        <span class="role-arrow">
+          →
+        </span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="role-option"
+        onclick="selectRole('lender')"
+      >
+
+        <div class="role-option-icon">
+          💰
+        </div>
+
+        <div class="role-option-content">
+
+          <strong>I'm a Lender</strong>
+
+          <span>
+            Finance productive machines and
+            earn a share of generated revenue.
+          </span>
+
+        </div>
+
+        <span class="role-arrow">
+          →
+        </span>
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
