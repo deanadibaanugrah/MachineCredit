@@ -9,7 +9,7 @@ const supabaseClient = window.supabase.createClient(
 
 console.log("Supabase client:", supabaseClient);
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://machinecreditapi-uz4bcv6i.b4a.run/api";
 
 const MACHINECREDIT_ADDRESS =
   "0xA1c35dF0eE85b7944c65de541D796a3C76700ba7";
