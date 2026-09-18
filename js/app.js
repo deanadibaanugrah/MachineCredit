@@ -1891,23 +1891,6 @@ async function switchWallet() {
 
     }
 
-
-    await window.ethereum.request({
-
-      method:
-        "wallet_requestPermissions",
-
-      params: [
-
-        {
-          eth_accounts: {}
-        }
-
-      ]
-
-    });
-
-
     await ensureBotChain();
 
 
