@@ -486,12 +486,13 @@
             <th>Capital</th>
             <th>Revenue Share</th>
             <th>Revenue Received</th>
+            <th>Principal</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody id="positionBody">
           <tr>
-            <td colspan="5" style="text-align:center;padding:40px;color:#8a97a8;">
+            <td colspan="6" style="text-align:center;padding:40px;color:#8a97a8;">
               No active positions
             </td>
           </tr>
@@ -544,6 +545,59 @@
             <span>Company</span>
             <strong id="settlementLenderShare">20%</strong>
             <span>Lenders</span>
+          </div>
+        </div>
+
+        <div class="settlement-share">
+          <div class="machine-label">Financing status</div>
+          <div class="split-value">
+            <strong id="settlementFinancingStatus">—</strong>
+            <span>Status</span>
+            <strong id="settlementAvailableWithdraw">$0</strong>
+            <span>Available to withdraw</span>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-dark"
+            id="withdrawFundingButton"
+            style="margin-top:12px;width:100%"
+            onclick="withdrawFundingFromUI()"
+          >
+            Withdraw Funding →
+          </button>
+        </div>
+
+        <div class="settlement-action">
+          <label for="repayPrincipalInput">
+            Repay principal (final settlement)
+          </label>
+
+          <p class="financing-copy">
+            This is a one-time final repayment. Once submitted,
+            financing closes permanently and cannot be repaid again.
+          </p>
+
+          <div class="settlement-input-row">
+            <div class="settlement-input">
+              <input
+                id="repayPrincipalInput"
+                type="number"
+                min="0.000001"
+                step="0.000001"
+                placeholder="0.00"
+              >
+              <span>USDT</span>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-dark"
+              id="repayPrincipalButton"
+              onclick="repayPrincipalFromUI()"
+            >
+              Repay Principal →
+            </button>
           </div>
         </div>
 

@@ -1,6 +1,8 @@
 import { machineCredit, provider } from "../config/blockchain.js";
 import { ethers } from "ethers";
 
+const FINANCING_STATUS_LABEL = ["Open", "Completed", "Defaulted"];
+
 /* =========================================================
    MONTHLY REVENUE — dihitung di background, bukan per-request
    ========================================================= */
@@ -471,6 +473,12 @@ export async function getMachines(
       const machine =
         await machineCredit.getMachine(i);
 
+      const financing =
+        await machineCredit.getFinancing(i);
+
+      const financingStatusCode =
+        Number(financing[5]);
+
 
       machines.push({
 
@@ -501,7 +509,10 @@ export async function getMachines(
           machine[7],
 
         active:
-          machine[8]
+          machine[8],
+
+        financingStatus:
+          FINANCING_STATUS_LABEL[financingStatusCode] || "Unknown"
 
       });
 

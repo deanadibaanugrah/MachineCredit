@@ -1998,7 +1998,7 @@ body.app-mode .app-nav-right{display:flex}
   height:7px;
   border-radius:50%;
   margin-right:5px;
-  background:var(--blue);
+  background:#94a3b8;
 }
 
 .machine-card-body{padding:16px}
@@ -2304,6 +2304,7 @@ body.app-mode .app-nav-right{display:flex}
 .position-sub{display:block;margin-top:4px;color:#8795a7;font-size:9px}
 
 .positive{color:#16865d;font-weight:750}
+.negative{color:#dc2626;font-weight:750}
 
 .launch-layout{
   display:grid;
@@ -3456,6 +3457,14 @@ body.app-mode .app-nav-right{display:flex}
 
 .machine-status.fully-funded .status-dot {
   background: #22c55e;
+}
+
+.machine-status.defaulted {
+  color: #dc2626;
+}
+
+.machine-status.defaulted .status-dot {
+  background: #ef4444;
 }
 
 .machine-loading-state,

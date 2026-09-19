@@ -18,13 +18,24 @@ const machineCreditAbi = [
   // Revenue
   "function depositRevenue(uint256,uint256)",
 
+  // Financing lifecycle
+  "function withdrawFunding(uint256)",
+  "function repayPrincipal(uint256,uint256)",
+  "function claimPrincipal(uint256)",
+  "function getFinancing(uint256) view returns (uint256,uint256,uint256,uint256,uint256,uint8)",
+  "function getPrincipalEntitlement(uint256,address) view returns (uint256)",
+  "function getClaimablePrincipal(uint256,address) view returns (uint256)",
+
   // Balance
   "function getUSDTBalance() view returns (uint256)",
 
   // Events
   "event InvestmentMade(uint256 indexed machineId,address indexed lender,uint256 amount)",
   "event RevenueDeposited(uint256 indexed machineId,uint256 revenue,uint256 lenderPool,uint256 companyShare)",
-  "event RevenueClaimed(uint256 indexed machineId,address indexed lender,uint256 amount)"
+  "event RevenueClaimed(uint256 indexed machineId,address indexed lender,uint256 amount)",
+  "event FundingWithdrawn(uint256 indexed machineId,address indexed owner,uint256 amount)",
+  "event PrincipalRepaid(uint256 indexed machineId,uint256 amount,uint256 principalLoss,uint8 status)",
+  "event PrincipalClaimed(uint256 indexed machineId,address indexed lender,uint256 amount)"
 ];
 
 const usdtAbi = [

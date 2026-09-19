@@ -14,7 +14,7 @@ console.log("Supabase client:", supabaseClient);
 const API_BASE_URL = "https://machinecredit-production.up.railway.app/api";
 
 const MACHINECREDIT_ADDRESS =
-  "0x8C48C922907f12Bc44A1eeA4093589C72a1dCD72";
+  "0xe669BC1281F59ad94E36e850736E5B0075C16e39";
 
 const USDT_ADDRESS =
   "0x75edC9335175Fc0552D51D48439F229c10420fe3";
@@ -48,6 +48,18 @@ const MACHINECREDIT_ABI = [
 
   "function depositRevenue(uint256,uint256)",
 
+  "function withdrawFunding(uint256)",
+
+  "function repayPrincipal(uint256,uint256)",
+
+  "function claimPrincipal(uint256)",
+
+  "function getFinancing(uint256) view returns (uint256,uint256,uint256,uint256,uint256,uint8)",
+
+  "function getPrincipalEntitlement(uint256,address) view returns (uint256)",
+
+  "function getClaimablePrincipal(uint256,address) view returns (uint256)",
+
   "function getUSDTBalance() view returns (uint256)",
 
   "event MachineRegistered(uint256 indexed machineId,string externalMachineId,string name,address indexed owner,uint256 fundingTarget,uint256 revenueSharePercent)",
@@ -56,8 +68,16 @@ const MACHINECREDIT_ABI = [
 
   "event RevenueDeposited(uint256 indexed machineId,uint256 revenue,uint256 lenderPool,uint256 companyShare)",
 
-  "event RevenueClaimed(uint256 indexed machineId,address indexed lender,uint256 amount)"
+  "event RevenueClaimed(uint256 indexed machineId,address indexed lender,uint256 amount)",
+
+  "event FundingWithdrawn(uint256 indexed machineId,address indexed owner,uint256 amount)",
+
+  "event PrincipalRepaid(uint256 indexed machineId,uint256 amount,uint256 principalLoss,uint8 status)",
+
+  "event PrincipalClaimed(uint256 indexed machineId,address indexed lender,uint256 amount)"
 ];
+
+const FINANCING_STATUS_LABEL = ["Open", "Completed", "Defaulted"];
 
 const USDT_ABI = [
   "function approve(address,uint256) returns (bool)",
@@ -808,7 +828,19 @@ function renderBlockchainMachines(machineList) {
 
     let statusText = "Inactive";
 
-    if (machine.active) {
+    if (
+      machine.financingStatus === "Completed"
+    ) {
+
+      statusText = "Repaid";
+
+    } else if (
+      machine.financingStatus === "Defaulted"
+    ) {
+
+      statusText = "Defaulted";
+
+    } else if (machine.active) {
 
       if (
         fundingTarget > 0 &&
@@ -868,9 +900,11 @@ function renderBlockchainMachines(machineList) {
         >
 
         <div class="machine-status ${
-          statusText === "Fully Funded"
+          statusText === "Fully Funded" || statusText === "Repaid"
             ? "fully-funded"
-            : ""
+            : statusText === "Defaulted"
+              ? "defaulted"
+              : ""
         }">
 
           <span class="status-dot"></span>
@@ -1078,7 +1112,7 @@ function renderEmptyPortfolio() {
     body.innerHTML = `
       <tr>
         <td
-          colspan="5"
+          colspan="6"
           style="
             text-align:center;
             padding:40px;
@@ -1162,7 +1196,7 @@ function renderPortfolio(data) {
     body.innerHTML = `
       <tr>
         <td
-          colspan="5"
+          colspan="6"
           style="
             text-align:center;
             padding:40px;
@@ -1265,17 +1299,55 @@ function renderPortfolio(data) {
 
             <td>
 
+              <div class="revenue-cell">
+
+                <span class="${
+                  position.financingStatus === "Defaulted"
+                    ? "negative"
+                    : ""
+                }">
+                  ${position.financingStatus || "Open"}
+                </span>
+
+                ${
+                  Number(position.claimablePrincipal || 0) > 0
+                    ? `
+                      <button
+                        class="claim-revenue-btn"
+                        onclick="claimPrincipal(${Number(
+                          position.machineId
+                        )})"
+                      >
+                        Claim $${formatUSDT(
+                          position.claimablePrincipal
+                        )}
+                      </button>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            </td>
+
+            <td>
+
               <span
                 class="${
-                  position.active
-                    ? "positive"
-                    : ""
+                  position.financingStatus === "Defaulted"
+                    ? "negative"
+                    : position.active
+                      ? "positive"
+                      : ""
                 }"
               >
                 ● ${
-                  position.active
-                    ? "Active"
-                    : "Closed"
+                  position.financingStatus &&
+                  position.financingStatus !== "Open"
+                    ? position.financingStatus
+                    : position.active
+                      ? "Active"
+                      : "Closed"
                 }
               </span>
 
@@ -3447,6 +3519,10 @@ function populateSettlementMachineSelect() {
     currentSettlementMachineId
   );
 
+  loadSettlementFinancing(
+    currentSettlementMachineId
+  );
+
 }
 
 
@@ -3463,6 +3539,10 @@ function onSettlementMachineChange() {
       : null;
 
   updateSettlementShareDisplay(
+    currentSettlementMachineId
+  );
+
+  loadSettlementFinancing(
     currentSettlementMachineId
   );
 
@@ -3490,6 +3570,523 @@ function updateSettlementShareDisplay(machineId) {
     "settlementCompanyShare",
     `${100 - lenderShare}%`
   );
+
+}
+
+
+async function loadSettlementFinancing(machineId) {
+
+  const statusEl =
+    document.getElementById("settlementFinancingStatus");
+
+  const availableEl =
+    document.getElementById("settlementAvailableWithdraw");
+
+  const withdrawBtn =
+    document.getElementById("withdrawFundingButton");
+
+  const repayBtn =
+    document.getElementById("repayPrincipalButton");
+
+  const repayInput =
+    document.getElementById("repayPrincipalInput");
+
+  if (!machineId) {
+
+    if (statusEl) statusEl.textContent = "—";
+    if (availableEl) availableEl.textContent = "$0";
+
+    return;
+
+  }
+
+  try {
+
+    const readContract =
+      new ethers.Contract(
+        MACHINECREDIT_ADDRESS,
+        MACHINECREDIT_ABI,
+        readOnlyProvider
+      );
+
+    const financing =
+      await readContract.getFinancing(machineId);
+
+    const statusCode =
+      Number(financing[5]);
+
+    const statusLabel =
+      FINANCING_STATUS_LABEL[statusCode] || "Unknown";
+
+    const isOpen =
+      statusCode === 0;
+
+    const availableToWithdraw =
+      financing[2];
+
+    if (statusEl) {
+      statusEl.textContent = statusLabel;
+    }
+
+    if (availableEl) {
+      availableEl.textContent =
+        `$${formatUSDT(availableToWithdraw)}`;
+    }
+
+    if (withdrawBtn) {
+
+      const disabled =
+        !isOpen || availableToWithdraw === 0n;
+
+      withdrawBtn.disabled = disabled;
+
+      withdrawBtn.classList.toggle(
+        "btn-disabled",
+        disabled
+      );
+
+    }
+
+    if (repayBtn) {
+
+      repayBtn.disabled = !isOpen;
+
+      repayBtn.classList.toggle(
+        "btn-disabled",
+        !isOpen
+      );
+
+    }
+
+    if (repayInput) {
+      repayInput.disabled = !isOpen;
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Failed to load financing status:",
+      error
+    );
+
+    if (statusEl) {
+      statusEl.textContent = "—";
+    }
+
+  }
+
+}
+
+
+async function withdrawFundingFromUI() {
+
+  try {
+
+    if (userRole !== "company") {
+
+      showToast(
+        "Select the company role to withdraw funding"
+      );
+
+      return;
+
+    }
+
+    if (!signer) {
+      await connectWallet();
+    }
+
+    if (!signer) {
+      return;
+    }
+
+    const machineId =
+      currentSettlementMachineId;
+
+    if (!machineId) {
+
+      showToast(
+        "Select a machine first"
+      );
+
+      return;
+
+    }
+
+    const contract =
+      new ethers.Contract(
+        MACHINECREDIT_ADDRESS,
+        MACHINECREDIT_ABI,
+        signer
+      );
+
+    showToast(
+      "Confirm withdrawal in MetaMask..."
+    );
+
+    const tx =
+      await contract.withdrawFunding(machineId);
+
+    showToast(
+      "Withdrawal submitted..."
+    );
+
+    await tx.wait();
+
+    showTransactionToast(
+      "Funding withdrawn",
+      tx.hash
+    );
+
+    await loadSettlementFinancing(machineId);
+
+    await loadMachinesFromBlockchain();
+
+  } catch (error) {
+
+    console.error(
+      "Withdraw funding failed:",
+      error
+    );
+
+    if (
+      error?.code === 4001 ||
+      error?.code === "ACTION_REJECTED"
+    ) {
+
+      showToast(
+        "Transaction rejected"
+      );
+
+      return;
+
+    }
+
+    showToast(
+      error?.shortMessage ||
+      error?.reason ||
+      error?.message ||
+      "Withdraw failed"
+    );
+
+  }
+
+}
+
+
+async function repayPrincipalFromUI() {
+
+  try {
+
+    if (userRole !== "company") {
+
+      showToast(
+        "Select the company role to repay principal"
+      );
+
+      return;
+
+    }
+
+    if (!signer) {
+      await connectWallet();
+    }
+
+    if (!signer) {
+      return;
+    }
+
+    const machineId =
+      currentSettlementMachineId;
+
+    if (!machineId) {
+
+      showToast(
+        "Select a machine first"
+      );
+
+      return;
+
+    }
+
+    const input =
+      document.getElementById(
+        "repayPrincipalInput"
+      );
+
+    const amount =
+      String(
+        input?.value || ""
+      ).trim();
+
+    if (
+      !amount ||
+      Number(amount) <= 0
+    ) {
+
+      showToast(
+        "Enter repayment amount"
+      );
+
+      return;
+
+    }
+
+    const amountRaw =
+      ethers.parseUnits(
+        amount,
+        6
+      );
+
+    const readContract =
+      new ethers.Contract(
+        MACHINECREDIT_ADDRESS,
+        MACHINECREDIT_ABI,
+        readOnlyProvider
+      );
+
+    const financingCheck =
+      await readContract.getFinancing(machineId);
+
+    const totalFundedRaw =
+      financingCheck[0];
+
+    if (Number(financingCheck[5]) !== 0) {
+
+      showToast(
+        "Financing already settled for this machine"
+      );
+
+      await loadSettlementFinancing(machineId);
+
+      return;
+
+    }
+
+    if (amountRaw > totalFundedRaw) {
+
+      showToast(
+        `Amount exceeds total funded ($${formatUSDT(totalFundedRaw)}). Repayment cannot exceed principal.`
+      );
+
+      return;
+
+    }
+
+    const confirmed =
+      window.confirm(
+        "This is a FINAL settlement. Once submitted, this machine's financing closes permanently and cannot be repaid again. Continue?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const contract =
+      new ethers.Contract(
+        MACHINECREDIT_ADDRESS,
+        MACHINECREDIT_ABI,
+        signer
+      );
+
+    const usdtContract =
+      new ethers.Contract(
+        USDT_ADDRESS,
+        USDT_ABI,
+        signer
+      );
+
+    const balance =
+      await usdtContract.balanceOf(
+        walletAddress
+      );
+
+    if (
+      balance < amountRaw
+    ) {
+
+      showToast(
+        "Insufficient USDT balance"
+      );
+
+      return;
+
+    }
+
+    showToast(
+      "Approve USDT in MetaMask..."
+    );
+
+    const approveTx =
+      await usdtContract.approve(
+        MACHINECREDIT_ADDRESS,
+        amountRaw
+      );
+
+    await approveTx.wait();
+
+    showToast(
+      "Confirm repayment in MetaMask..."
+    );
+
+    const tx =
+      await contract.repayPrincipal(
+        machineId,
+        amountRaw
+      );
+
+    showToast(
+      "Repayment submitted..."
+    );
+
+    await tx.wait();
+
+    showTransactionToast(
+      `Principal repaid — ${amount} USDT`,
+      tx.hash
+    );
+
+    if (input) {
+      input.value = "";
+    }
+
+    await loadSettlementFinancing(machineId);
+
+    await loadMachinesFromBlockchain();
+
+  } catch (error) {
+
+    console.error(
+      "Repay principal failed:",
+      error
+    );
+
+    if (
+      error?.code === 4001 ||
+      error?.code === "ACTION_REJECTED"
+    ) {
+
+      showToast(
+        "Transaction rejected"
+      );
+
+      return;
+
+    }
+
+    showToast(
+      error?.shortMessage ||
+      error?.reason ||
+      error?.message ||
+      "Repayment failed"
+    );
+
+  }
+
+}
+
+
+async function claimPrincipal(machineId) {
+
+  try {
+
+    if (userRole !== "lender") {
+
+      showToast(
+        "Select the lender role to claim principal"
+      );
+
+      return;
+
+    }
+
+    if (!signer) {
+      await connectWallet();
+    }
+
+    if (!signer) {
+      return;
+    }
+
+    const contract =
+      new ethers.Contract(
+        MACHINECREDIT_ADDRESS,
+        MACHINECREDIT_ABI,
+        signer
+      );
+
+    const claimable =
+      await contract.getClaimablePrincipal(
+        machineId,
+        walletAddress
+      );
+
+    if (claimable === 0n) {
+
+      showToast(
+        "No principal available to claim"
+      );
+
+      return;
+
+    }
+
+    const amount =
+      ethers.formatUnits(
+        claimable,
+        6
+      );
+
+    showToast(
+      "Confirm claim in MetaMask..."
+    );
+
+    const tx =
+      await contract.claimPrincipal(
+        machineId
+      );
+
+    showToast(
+      "Claim submitted..."
+    );
+
+    await tx.wait();
+
+    showTransactionToast(
+      `Principal claimed — ${amount} USDT`,
+      tx.hash
+    );
+
+    await loadPortfolio();
+
+  } catch (error) {
+
+    console.error(
+      "Claim principal failed:",
+      error
+    );
+
+    if (
+      error?.code === 4001 ||
+      error?.code === "ACTION_REJECTED"
+    ) {
+
+      showToast(
+        "Transaction rejected"
+      );
+
+      return;
+
+    }
+
+    showToast(
+      error?.shortMessage ||
+      error?.reason ||
+      error?.message ||
+      "Claim failed"
+    );
+
+  }
 
 }
 

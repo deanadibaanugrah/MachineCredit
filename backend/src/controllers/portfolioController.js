@@ -1,6 +1,8 @@
 import { ethers } from "ethers";
 import { machineCredit } from "../config/blockchain.js";
 
+const FINANCING_STATUS_LABEL = ["Open", "Completed", "Defaulted"];
+
 export async function getPortfolio(req, res) {
   try {
     const { wallet } = req.params;
@@ -18,6 +20,7 @@ export async function getPortfolio(req, res) {
 
     let totalInvested = 0n;
     let totalEarned = 0n;
+    let totalClaimablePrincipal = 0n;
 
     for (let i = 1; i <= Number(count); i++) {
 
@@ -41,6 +44,14 @@ export async function getPortfolio(req, res) {
       totalInvested += invested;
       totalEarned += earned;
 
+      const financing = await machineCredit.getFinancing(i);
+      const financingStatusCode = Number(financing[5]);
+
+      const claimablePrincipal =
+        await machineCredit.getClaimablePrincipal(i, wallet);
+
+      totalClaimablePrincipal += claimablePrincipal;
+
       positions.push({
         machineId: i,
 
@@ -59,7 +70,12 @@ export async function getPortfolio(req, res) {
         totalEarned: earned.toString(),
         pendingRevenue: pending.toString(),
 
-        active
+        active,
+
+        financingStatus: FINANCING_STATUS_LABEL[financingStatusCode] || "Unknown",
+        principalRepaid: financing[3].toString(),
+        principalLoss: financing[4].toString(),
+        claimablePrincipal: claimablePrincipal.toString()
       });
     }
 
@@ -85,6 +101,8 @@ export async function getPortfolio(req, res) {
           sum + BigInt(position.pendingRevenue),
         0n
       ).toString(),
+
+      totalClaimablePrincipal: totalClaimablePrincipal.toString(),
 
       averagePerformance,
 
