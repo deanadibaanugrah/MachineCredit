@@ -2096,6 +2096,7 @@ body.app-mode .app-nav-right{display:flex}
   display:grid;
   grid-template-columns:1.35fr .65fr;
   gap:14px;
+  align-items:start;
 }
 
 .detail-card{

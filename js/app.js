@@ -22,6 +22,10 @@ const USDT_ADDRESS =
 const BOT_CHAIN_ID = 968;
 const BOT_CHAIN_HEX = "0x3C8";
 const EXPLORER_URL = "https://scan.bohr.life";
+const BOT_RPC_URL = "https://rpc.bohr.life";
+
+const readOnlyProvider =
+  new ethers.JsonRpcProvider(BOT_RPC_URL);
 
 /* =========================================================
    CONTRACT ABI
@@ -46,7 +50,9 @@ const MACHINECREDIT_ABI = [
 
   "function getUSDTBalance() view returns (uint256)",
 
-  "event InvestmentMade(uint256 indexed machineId,address indexed lender,uint256 amount)",
+  "event MachineRegistered(uint256 indexed machineId,string externalMachineId,string name,address indexed owner,uint256 fundingTarget,uint256 revenueSharePercent)",
+
+  "event InvestmentMade(uint256 indexed machineId,address indexed lender,uint256 amount)", 
 
   "event RevenueDeposited(uint256 indexed machineId,uint256 revenue,uint256 lenderPool,uint256 companyShare)",
 
@@ -259,6 +265,253 @@ function formatUSDT(value) {
 }
 
 /* =========================================================
+   RECENT ACTIVITY FEED (onchain)
+   ========================================================= */
+
+function shortAddress(address) {
+
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+
+}
+
+function formatRelativeTime(timestampSeconds) {
+
+  const diff =
+    Math.floor(Date.now() / 1000) - timestampSeconds;
+
+  if (diff < 60) {
+    return "just now";
+  }
+
+  if (diff < 3600) {
+    return `${Math.floor(diff / 60)} min ago`;
+  }
+
+  if (diff < 86400) {
+    return `${Math.floor(diff / 3600)} hr ago`;
+  }
+
+  return `${Math.floor(diff / 86400)} day${
+    Math.floor(diff / 86400) === 1 ? "" : "s"
+  } ago`;
+
+}
+
+function findMachineLabel(machineIdOnchain) {
+
+  const machine =
+    blockchainMachines.find(
+      m => Number(m.id) === Number(machineIdOnchain)
+    );
+
+  return machine
+    ? machine.machineId
+    : `Machine #${machineIdOnchain}`;
+
+}
+
+async function loadRecentActivity() {
+
+  const feed =
+    document.getElementById("activityFeed");
+
+  if (!feed) {
+    return;
+  }
+
+  try {
+
+    const readContract =
+      new ethers.Contract(
+        MACHINECREDIT_ADDRESS,
+        MACHINECREDIT_ABI,
+        readOnlyProvider
+      );
+
+    const latestBlock =
+      await readOnlyProvider.getBlockNumber();
+
+    const fromBlock =
+      Math.max(latestBlock - 5000, 0);
+
+    const [
+      registeredLogs,
+      investmentLogs,
+      revenueLogs,
+      claimLogs
+    ] = await Promise.all([
+
+      readContract.queryFilter(
+        readContract.filters.MachineRegistered(),
+        fromBlock,
+        latestBlock
+      ),
+
+      readContract.queryFilter(
+        readContract.filters.InvestmentMade(),
+        fromBlock,
+        latestBlock
+      ),
+
+      readContract.queryFilter(
+        readContract.filters.RevenueDeposited(),
+        fromBlock,
+        latestBlock
+      ),
+
+      readContract.queryFilter(
+        readContract.filters.RevenueClaimed(),
+        fromBlock,
+        latestBlock
+      )
+
+    ]);
+
+    const allLogs = [
+      ...registeredLogs.map(log => ({ log, type: "registered" })),
+      ...investmentLogs.map(log => ({ log, type: "invested" })),
+      ...revenueLogs.map(log => ({ log, type: "deposited" })),
+      ...claimLogs.map(log => ({ log, type: "claimed" }))
+    ];
+
+    allLogs.sort((a, b) => {
+
+      if (b.log.blockNumber !== a.log.blockNumber) {
+        return b.log.blockNumber - a.log.blockNumber;
+      }
+
+      return b.log.index - a.log.index;
+
+    });
+
+    const topLogs =
+      allLogs.slice(0, 6);
+
+    if (!topLogs.length) {
+
+      feed.innerHTML = `
+        <div class="activity-row">
+          <div class="activity-main">
+            <strong>No activity yet</strong>
+            <span>Onchain events will appear here</span>
+          </div>
+        </div>
+      `;
+
+      return;
+
+    }
+
+    const blockNumbers =
+      [...new Set(topLogs.map(item => item.log.blockNumber))];
+
+    const blocks =
+      await Promise.all(
+        blockNumbers.map(bn => readOnlyProvider.getBlock(bn))
+      );
+
+    const blockTimeMap = {};
+
+    blockNumbers.forEach((bn, index) => {
+      blockTimeMap[bn] = blocks[index]?.timestamp || 0;
+    });
+
+    feed.innerHTML =
+      topLogs
+        .map(item => {
+
+          const timeLabel =
+            formatRelativeTime(
+              blockTimeMap[item.log.blockNumber] || 0
+            );
+
+          const args = item.log.args;
+
+          if (item.type === "registered") {
+
+            return `
+              <div class="activity-row">
+                <div class="activity-main">
+                  <strong>${escapeHTML(args.externalMachineId)} just launched</strong>
+                  <span>${escapeHTML(args.name)} · ${timeLabel}</span>
+                </div>
+                <div class="activity-value">New</div>
+              </div>
+            `;
+
+          }
+
+          if (item.type === "invested") {
+
+            const machineLabel =
+              findMachineLabel(args.machineId);
+
+            return `
+              <div class="activity-row">
+                <div class="activity-main">
+                  <strong>${shortAddress(args.lender)} invested in ${escapeHTML(machineLabel)}</strong>
+                  <span>Investment · ${timeLabel}</span>
+                </div>
+                <div class="activity-value">$${formatUSDT(args.amount)}</div>
+              </div>
+            `;
+
+          }
+
+          if (item.type === "deposited") {
+
+            const machineLabel =
+              findMachineLabel(args.machineId);
+
+            return `
+              <div class="activity-row">
+                <div class="activity-main">
+                  <strong>${escapeHTML(machineLabel)} revenue deposited</strong>
+                  <span>Revenue settlement · ${timeLabel}</span>
+                </div>
+                <div class="activity-value">$${formatUSDT(args.revenue)}</div>
+              </div>
+            `;
+
+          }
+
+          const machineLabel =
+            findMachineLabel(args.machineId);
+
+          return `
+            <div class="activity-row">
+              <div class="activity-main">
+                <strong>${shortAddress(args.lender)} claimed revenue</strong>
+                <span>${escapeHTML(machineLabel)} · ${timeLabel}</span>
+              </div>
+              <div class="activity-value">$${formatUSDT(args.amount)}</div>
+            </div>
+          `;
+
+        })
+        .join("");
+
+  } catch (error) {
+
+    console.error(
+      "Failed to load recent activity:",
+      error
+    );
+
+    feed.innerHTML = `
+      <div class="activity-row">
+        <div class="activity-main">
+          <strong>Unable to load activity</strong>
+          <span>Please try again later</span>
+        </div>
+      </div>
+    `;
+
+  }
+
+}
+
+/* =========================================================
    MACHINE HELPERS
    ========================================================= */
 
@@ -395,6 +648,8 @@ async function loadMachinesFromBlockchain() {
     );
 
     loadMonthlyRevenue();
+
+    loadRecentActivity();
 
     if (userRole) {
       await initializeWalletRole(false);
@@ -2701,6 +2956,8 @@ async function claimRevenue(
 
 
     await loadPortfolio();
+
+    await loadRecentActivity();
 
   } catch (error) {
 
