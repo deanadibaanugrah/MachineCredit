@@ -239,6 +239,14 @@ function showTransactionToast(message, txHash) {
 }
 
 
+function showComingSoonModal() {
+  document.getElementById("comingSoonModal")?.classList.add("active");
+}
+
+function hideComingSoonModal() {
+  document.getElementById("comingSoonModal")?.classList.remove("active");
+}
+
 function formatUSDT(value) {
 
   try {

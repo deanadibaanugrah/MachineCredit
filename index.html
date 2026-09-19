@@ -79,6 +79,8 @@
     <div class="hero-actions">
       <a href="app.html" class="btn btn-dark">Launch App →</a>
       <a href="#how" class="btn btn-white">Learn More ↓</a>
+      <a href="#" class="btn btn-white">Presentation</a>
+      <a href="https://github.com/SannyDermawan/MachineCredit" target="_blank" rel="noopener noreferrer" class="btn btn-white">GitHub</a>
     </div>
 
     <div class="hero-proof">
@@ -372,7 +374,7 @@
         verifiable performance, programmable financing, and onchain settlement.
       </p>
 
-      <a href="#docs" class="btn btn-white" style="display:inline-block;margin-top:27px;">
+      <a href="#" onclick="event.preventDefault(); showComingSoonModal();" class="btn btn-white" style="display:inline-block;margin-top:27px;">
         Read the Docs →
       </a>
     </div>
@@ -445,7 +447,7 @@
 
       <div class="cta-actions">
         <a href="app.html" class="btn btn-dark">Launch App →</a>
-        <a href="#docs" class="btn btn-white">Read the Docs</a>
+        <a href="#" onclick="event.preventDefault(); showComingSoonModal();" class="btn btn-white">Read the Docs</a>
       </div>
     </div>
 
@@ -470,19 +472,19 @@
 
       <div>
         <h4>Resources</h4>
-        <a href="#docs">Docs</a>
+        <a href="#" onclick="event.preventDefault(); showComingSoonModal();">Docs</a>
       </div>
 
       <div>
         <h4>Network</h4>
-        <a href="#">BOT Chain</a>
-        <a href="#">Explorer</a>
+        <a href="#" onclick="event.preventDefault(); showComingSoonModal();">BOT Chain</a>
+        <a href="https://scan.bohr.life/address/0x8C48C922907f12Bc44A1eeA4093589C72a1dCD72" target="_blank">Explorer</a>
       </div>
 
       <div>
         <h4>Community</h4>
-        <a href="#">X / Twitter</a>
-        <a href="#">Discord</a>
+        <a href="#" onclick="event.preventDefault(); showComingSoonModal();">X / Twitter</a>
+        <a href="#" onclick="event.preventDefault(); showComingSoonModal();">Discord</a>
       </div>
 
     </div>
@@ -496,8 +498,23 @@
       </span>
     </div>
   </div>
+
+
 </footer>
 
+<div class="modal" id="comingSoonModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3>Coming Soon</h3>
+        <p>This feature isn't available yet — it's still part of the MVP.</p>
+      </div>
+      <button class="modal-close" onclick="hideComingSoonModal()">×</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/app.js"></script>
 
