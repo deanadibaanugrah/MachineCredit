@@ -189,126 +189,10 @@
 
     </div>
 
-
-    <div class="machine-catalog" id="machineCatalog">
-
-  <article class="machine-card" data-type="forklift" data-machine-id="RBT-002">
-    <div class="machine-photo">
-      <img src="asset/rbt-002.png" alt="RBT-002 Autonomous Forklift">
-      <div class="machine-status">
-        <span class="status-dot"></span>
-        Open for financing
-      </div>
-    </div>
-
-    <div class="machine-card-body">
-      <div class="machine-card-title">RBT-002</div>
-      <div class="machine-card-type">AUTONOMOUS FORKLIFT</div>
-
-      <div class="machine-card-metrics">
-        <div class="machine-card-metric">
-          <strong>96%</strong>
-          <span>Performance</span>
-        </div>
-
-        <div class="machine-card-metric">
-          <strong>$10K</strong>
-          <span>Monthly Revenue</span>
-        </div>
-
-        <div class="machine-card-metric">
-          <strong>20%</strong>
-          <span>Revenue Share</span>
-        </div>
-      </div>
-
-      <button
-        class="machine-card-button"
-        onclick="showMachineDetail('RBT-002')">
-        View Details →
-      </button>
-    </div>
-  </article>
-
-
-  <article class="machine-card" data-type="amr" data-machine-id="AMR-001">
-    <div class="machine-photo">
-      <img src="asset/warehouse-amr.png" alt="AMR-001 Autonomous Mobile Robot">
-      <div class="machine-status">
-        <span class="status-dot"></span>
-        Open for financing
-      </div>
-    </div>
-
-    <div class="machine-card-body">
-      <div class="machine-card-title">AMR-001</div>
-      <div class="machine-card-type">AUTONOMOUS MOBILE ROBOT</div>
-
-      <div class="machine-card-metrics">
-        <div class="machine-card-metric">
-          <strong>94%</strong>
-          <span>Performance</span>
-        </div>
-
-        <div class="machine-card-metric">
-          <strong>$7.5K</strong>
-          <span>Monthly Revenue</span>
-        </div>
-
-        <div class="machine-card-metric">
-          <strong>18%</strong>
-          <span>Revenue Share</span>
-        </div>
-      </div>
-
-      <button
-        class="machine-card-button"
-        onclick="showMachineDetail('AMR-001')">
-        View Details →
-      </button>
-    </div>
-  </article>
-
-
-  <article class="machine-card" data-type="arm" data-machine-id="ARM-003">
-    <div class="machine-photo">
-      <img src="asset/robot-arm.png" alt="ARM-003 Industrial Robotic Arm">
-      <div class="machine-status">
-        <span class="status-dot"></span>
-        Open for financing
-      </div>
-    </div>
-
-    <div class="machine-card-body">
-      <div class="machine-card-title">ARM-003</div>
-      <div class="machine-card-type">INDUSTRIAL ROBOTIC ARM</div>
-
-      <div class="machine-card-metrics">
-        <div class="machine-card-metric">
-          <strong>97%</strong>
-          <span>Performance</span>
-        </div>
-
-        <div class="machine-card-metric">
-          <strong>$12K</strong>
-          <span>Monthly Revenue</span>
-        </div>
-
-        <div class="machine-card-metric">
-          <strong>22%</strong>
-          <span>Revenue Share</span>
-        </div>
-      </div>
-
-      <button
-        class="machine-card-button"
-        onclick="showMachineDetail('ARM-003')">
-        View Details →
-      </button>
-    </div>
-  </article>
-
-</div>
+    <div
+      id="machineCatalog"
+      class="machine-catalog"
+    ></div>
 
   </div>
 
@@ -394,23 +278,67 @@
         </div>
 
         <div class="chart-wrap">
+
           <div class="chart-top">
-            <div class="chart-label">Performance history · 30 days</div>
-            <div class="chart-value" id="detailChartValue">+4.8%</div>
+            <div class="chart-label">
+              Performance history · 30 days
+            </div>
+
+            <div
+              class="chart-value"
+              id="detailChartValue"
+            >
+              —
+            </div>
           </div>
-          <svg class="fake-chart" viewBox="0 0 600 170" preserveAspectRatio="none">
+
+          <svg
+            class="fake-chart"
+            id="performanceChart"
+            viewBox="0 0 600 170"
+            preserveAspectRatio="none"
+          >
+
             <defs>
-              <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#1769ff" stop-opacity=".16"/>
-                <stop offset="100%" stop-color="#1769ff" stop-opacity="0"/>
+
+              <linearGradient
+                id="chartFill"
+                x1="0"
+                x2="0"
+                y1="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="#1769ff"
+                  stop-opacity=".16"
+                />
+
+                <stop
+                  offset="100%"
+                  stop-color="#1769ff"
+                  stop-opacity="0"
+                />
               </linearGradient>
+
             </defs>
-            <path d="M0 137 L55 129 L110 132 L165 105 L220 112 L275 83 L330 90 L385 62 L440 72 L495 45 L550 53 L600 27 L600 170 L0 170 Z"
-                  fill="url(#chartFill)"/>
-            <polyline points="0,137 55,129 110,132 165,105 220,112 275,83 330,90 385,62 440,72 495,45 550,53 600,27"
-                      fill="none" stroke="#1769ff" stroke-width="3"
-                      stroke-linecap="round" stroke-linejoin="round"/>
+
+            <path
+              id="performanceChartFill"
+              fill="url(#chartFill)"
+            ></path>
+
+            <polyline
+              id="performanceChartLine"
+              fill="none"
+              stroke="#1769ff"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></polyline>
+
           </svg>
+
         </div>
       </div>
 
@@ -458,6 +386,7 @@
             >
 
             <button
+              id="investButton"
               class="btn btn-dark"
               onclick="fundMachine()"
             >
@@ -465,6 +394,47 @@
             </button>
 
           </div>
+        </div>
+
+        <div class="verify-box onchain-verification">
+
+          <div class="verify-head">
+            <span class="verify-status">
+              <span class="verify-status-dot"></span>
+              ON-CHAIN VERIFIED
+            </span>
+          </div>
+
+          <div class="verify-row">
+            <span>Machine ID</span>
+            <code id="verifiedMachineId">—</code>
+          </div>
+
+          <div class="verify-row">
+            <span>Owner</span>
+            <code id="verifiedMachineOwner">—</code>
+          </div>
+
+          <div class="verify-row">
+            <span>Network</span>
+            <code>BOT Chain</code>
+          </div>
+
+          <div class="verify-row">
+            <span>Contract</span>
+            <code id="verifiedContract">—</code>
+          </div>
+
+          <a
+            id="verifiedExplorerLink"
+            class="verify-explorer-link"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on Explorer ↗
+          </a>
+
         </div>
 
         <div class="verify-box">

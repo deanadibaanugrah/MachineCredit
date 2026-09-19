@@ -3429,3 +3429,170 @@ body.app-mode .app-nav-right{display:flex}
   }
 
 }
+
+.machine-status.fully-funded {
+  color: #16a34a;
+}
+
+.machine-status.fully-funded .status-dot {
+  background: #22c55e;
+}
+
+.machine-loading-state,
+.machine-error-state {
+  width: 100%;
+  min-height: 260px;
+
+  grid-column: 1 / -1;
+  justify-self: center;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: none;
+  border-radius: 0;
+  background: transparent;
+
+  text-align: center;
+}
+
+.machine-loading-state strong,
+.machine-error-state strong {
+  font-size: 16px;
+  color: #172033;
+}
+
+.machine-loading-state span,
+.machine-error-state > span {
+  font-size: 13px;
+  color: #7b8798;
+}
+
+.machine-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #dbe4f0;
+  border-top-color: #1769ff;
+  border-radius: 50%;
+  animation: machine-loading-spin 0.8s linear infinite;
+  margin-bottom: 4px;
+}
+
+@keyframes machine-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.machine-retry-button {
+  margin-top: 10px;
+  padding: 9px 16px;
+  border: 1px solid #d7dee8;
+  border-radius: 8px;
+  background: #fff;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.machine-retry-button:hover {
+  background: #f5f8fc;
+}
+
+.onchain-verification {
+  padding: 17px;
+  background: #fbfdff;
+}
+
+.verify-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.verify-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #18835d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.verify-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: inline-block;
+}
+
+.verify-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 9px 0;
+  border-top: 1px solid #e8eef5;
+}
+
+.verify-row:first-of-type {
+  border-top: 0;
+}
+
+.verify-row > span {
+  color: #8491a3;
+  font-size: 10px;
+}
+
+.verify-row code {
+  margin: 0;
+  color: #34465d;
+  font-size: 9px;
+  text-align: right;
+}
+
+.verify-explorer-link {
+  display: inline-flex;
+  margin-top: 12px;
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.verify-explorer-link:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   INVEST BUTTON — FULLY FUNDED STATE
+   ========================================= */
+
+.btn:disabled,
+.btn-disabled {
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.btn:disabled:hover,
+.btn-disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.investment-form input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}

@@ -9,6 +9,8 @@ const supabaseClient = window.supabase.createClient(
 
 console.log("Supabase client:", supabaseClient);
 
+// const API_BASE_URL = "http://localhost:5000/api";
+
 const API_BASE_URL = "https://machinecreditapi-ifrvwyy3.b4a.run/api";
 
 const MACHINECREDIT_ADDRESS =
@@ -333,7 +335,30 @@ function getMachineImageFallback(category) {
 
 async function loadMachinesFromBlockchain() {
 
-  try {
+  const catalog =
+    document.getElementById(
+      "machineCatalog"
+    );
+
+  if (catalog) {
+
+    catalog.innerHTML = `
+      <div class="machine-loading-state">
+        <span class="machine-loading-spinner"></span>
+        <strong>Loading machines...</strong>
+        <span>
+          Fetching live machine data from blockchain.
+        </span>
+      </div>
+    `;
+
+  }
+
+  try { 
+
+    await new Promise(resolve =>
+  setTimeout(resolve, 3000)
+);
 
     const response =
       await fetch(
@@ -375,7 +400,6 @@ async function loadMachinesFromBlockchain() {
       await initializeWalletRole(false);
     }
 
-    
     if (userRole === "company") {
       populateSettlementMachineSelect();
     }
@@ -386,6 +410,36 @@ async function loadMachinesFromBlockchain() {
       "Failed to load machines:",
       error
     );
+
+    if (catalog) {
+
+      catalog.innerHTML = `
+        <div class="machine-error-state">
+
+          <strong>
+            Unable to load machines
+          </strong>
+
+          <span>
+            Machine data is currently unavailable.
+          </span>
+
+          <button
+            type="button"
+            class="machine-retry-button"
+            onclick="loadMachinesFromBlockchain()"
+          >
+            Retry
+          </button>
+
+        </div>
+      `;
+
+    }
+
+    setText("totalMachines", "—");
+    setText("openFinancing", "—");
+    setText("monthlyRevenue", "—");
 
     showToast(
       "Failed to load machines from blockchain"
@@ -454,14 +508,23 @@ async function loadMonthlyRevenue(forceRefresh = false) {
 
 function renderBlockchainMachines(machineList) {
 
+  console.log("RENDER CALLED");
+  console.log("Machine list:", machineList);
+
   const catalog =
-    document.getElementById(
-      "machineCatalog"
-    );
+    document.getElementById("machineCatalog");
 
   if (!catalog) {
+    console.error(
+      "machineCatalog element NOT FOUND"
+    );
     return;
   }
+
+  console.log(
+    "machineCatalog found:",
+    catalog
+  );
 
   catalog.innerHTML = "";
 
@@ -469,8 +532,35 @@ function renderBlockchainMachines(machineList) {
 
   machineList.forEach(machine => {
 
+    console.log(
+      "Rendering machine:",
+      machine
+    );
+
+    const totalFunded =
+      Number(machine.totalFunded || 0);
+
+    const fundingTarget =
+      Number(machine.fundingTarget || 0);
+
+    let statusText = "Inactive";
+
     if (machine.active) {
-      openFinancing++;
+
+      if (
+        fundingTarget > 0 &&
+        totalFunded >= fundingTarget
+      ) {
+
+        statusText = "Fully Funded";
+
+      } else {
+
+        statusText = "Open for financing";
+        openFinancing++;
+
+      }
+
     }
 
     const category =
@@ -478,10 +568,13 @@ function renderBlockchainMachines(machineList) {
         machine.name
       );
 
+    console.log(
+      "Machine category:",
+      category
+    );
+
     const card =
-      document.createElement(
-        "article"
-      );
+      document.createElement("article");
 
     card.className =
       "machine-card";
@@ -492,30 +585,37 @@ function renderBlockchainMachines(machineList) {
     card.dataset.machineId =
       machine.machineId;
 
+    /*
+      Untuk sementara gunakan fallback image.
+      Kita pisahkan dulu logic image dari
+      proses rendering card.
+    */
+
+    const image =
+      getMachineImageFallback(category);
+
     card.innerHTML = `
 
       <div class="machine-photo">
 
         <img
-          src="${getMachineImage(category, machine.machineId)}"
+          src="${image}"
           alt="${escapeHTML(machine.machineId)}"
-          onerror="this.onerror=null;this.src='${getMachineImageFallback(category)}';"
         >
 
-        <div class="machine-status">
+        <div class="machine-status ${
+          statusText === "Fully Funded"
+            ? "fully-funded"
+            : ""
+        }">
 
           <span class="status-dot"></span>
 
-          ${
-            machine.active
-              ? "Open for financing"
-              : "Inactive"
-          }
+          ${statusText}
 
         </div>
 
       </div>
-
 
       <div class="machine-card-body">
 
@@ -526,7 +626,6 @@ function renderBlockchainMachines(machineList) {
         <div class="machine-card-type">
           ${escapeHTML(machine.name)}
         </div>
-
 
         <div class="machine-card-metrics">
 
@@ -544,7 +643,6 @@ function renderBlockchainMachines(machineList) {
 
           </div>
 
-
           <div class="machine-card-metric">
 
             <strong>
@@ -558,7 +656,6 @@ function renderBlockchainMachines(machineList) {
             </span>
 
           </div>
-
 
           <div class="machine-card-metric">
 
@@ -576,21 +673,32 @@ function renderBlockchainMachines(machineList) {
 
         </div>
 
-
         <button
           class="machine-card-button"
-          onclick="showMachineDetail(${Number(machine.id)})"
+          onclick="showMachineDetail(${Number(
+            machine.id
+          )})"
         >
           View Details →
         </button>
 
       </div>
+
     `;
 
     catalog.appendChild(card);
 
   });
 
+  console.log(
+    "Cards rendered:",
+    catalog.children.length
+  );
+
+  console.log(
+    "Open financing:",
+    openFinancing
+  );
 
   setText(
     "totalMachines",
@@ -1042,6 +1150,169 @@ function showView(view) {
    MACHINE DETAIL
    ========================================================= */
 
+function hashSeed(str) {
+
+  let hash = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  }
+
+  return hash;
+
+}
+
+function mulberry32(seed) {
+
+  return function () {
+
+    seed |= 0;
+    seed = (seed + 0x6D2B79F5) | 0;
+
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+
+  };
+
+}
+
+function generateProgressShape(seedStr) {
+
+  const rand = mulberry32(hashSeed(String(seedStr || "machine")));
+
+  const steps = 10;
+
+  const shape = [0];
+
+  let last = 0;
+
+  for (let i = 1; i <= steps; i++) {
+
+    const base = i / (steps + 1);
+
+    const noise = (rand() - 0.5) * 0.18;
+
+    let value = base + noise;
+
+    value = Math.max(last - 0.05, Math.min(0.97, value));
+
+    shape.push(value);
+
+    last = value;
+
+  }
+
+  shape.push(1);
+
+  return shape;
+
+}
+
+function updatePerformanceChart(performance, machineSeed) {
+
+  const line =
+    document.getElementById(
+      "performanceChartLine"
+    );
+
+  const fill =
+    document.getElementById(
+      "performanceChartFill"
+    );
+
+  const chartValue =
+    document.getElementById(
+      "detailChartValue"
+    );
+
+  if (!line || !fill) {
+    return;
+  }
+
+  const finalValue =
+    Math.max(
+      0,
+      Math.min(
+        Number(performance || 0),
+        100
+      )
+    );
+
+  const progressShape =
+    generateProgressShape(machineSeed);
+
+  const points = [];
+
+  progressShape.forEach(
+    (progress, index) => {
+
+      const x =
+        (600 / (progressShape.length - 1)) *
+        index;
+
+      const value =
+        finalValue * progress;
+
+      const y =
+        150 -
+        (value / 100) * 120;
+
+      points.push({
+        x,
+        y
+      });
+
+    }
+  );
+
+  const linePoints =
+    points
+      .map(
+        point =>
+          `${point.x},${point.y}`
+      )
+      .join(" ");
+
+  line.setAttribute(
+    "points",
+    linePoints
+  );
+
+  const first =
+    points[0];
+
+  const last =
+    points[points.length - 1];
+
+  const middlePath =
+    points
+      .map(
+        (point, index) =>
+          `${index === 0 ? "M" : "L"}${point.x} ${point.y}`
+      )
+      .join(" ");
+
+  const fillPath = `
+    ${middlePath}
+    L ${last.x} 170
+    L ${first.x} 170
+    Z
+  `;
+
+  fill.setAttribute(
+    "d",
+    fillPath
+  );
+
+  if (chartValue) {
+    chartValue.textContent =
+      `${finalValue.toFixed(0)}%`;
+  }
+
+}
+   
 function showMachineDetail(machineId) {
 
   currentMachineId =
@@ -1113,6 +1384,30 @@ function showMachineDetail(machineId) {
     data.machineId
   );
 
+  setText(
+    "verifiedMachineId",
+    data.machineId
+  );
+
+  setText(
+    "verifiedMachineOwner",
+    data.owner
+  );
+
+  setText(
+    "verifiedContract",
+    MACHINECREDIT_ADDRESS
+  );
+
+  const explorerLink =
+    document.getElementById(
+      "verifiedExplorerLink"
+    );
+
+  if (explorerLink) {
+    explorerLink.href =
+      `${EXPLORER_URL}/address/${MACHINECREDIT_ADDRESS}`;
+  }
 
   setText(
     "detailType",
@@ -1129,6 +1424,10 @@ function showMachineDetail(machineId) {
     )}%`
   );
 
+  updatePerformanceChart(
+    data.performanceScore,
+    data.machineId
+  );
 
   setText(
     "detailRevenue",
@@ -1148,13 +1447,6 @@ function showMachineDetail(machineId) {
     "detailJobs",
     "—"
   );
-
-
-  setText(
-    "detailChartValue",
-    "Live"
-  );
-
 
     setText(
     "fundingTarget",
@@ -1238,6 +1530,43 @@ function showMachineDetail(machineId) {
 
   }
 
+    const isFullyFunded =
+    target > 0 &&
+    funded >= target;
+
+  const investButton =
+    document.getElementById(
+      "investButton"
+    );
+
+  const investInput =
+    document.getElementById(
+      "investmentAmount"
+    );
+
+  if (investButton) {
+
+    investButton.disabled =
+      isFullyFunded;
+
+    investButton.classList.toggle(
+      "btn-disabled",
+      isFullyFunded
+    );
+
+    investButton.textContent =
+      isFullyFunded
+        ? "Fully Funded"
+        : "Invest in Machine →";
+
+  }
+
+  if (investInput) {
+
+    investInput.disabled =
+      isFullyFunded;
+
+  }
 
   window.scrollTo({
     top: 0,
@@ -2265,6 +2594,27 @@ async function fundMachine() {
 
     }
 
+        const machineData =
+      blockchainMachines.find(
+        machine =>
+          Number(machine.id) ===
+          Number(currentMachineId)
+      );
+
+    if (
+      machineData &&
+      Number(machineData.fundingTarget || 0) > 0 &&
+      Number(machineData.totalFunded || 0) >=
+        Number(machineData.fundingTarget || 0)
+    ) {
+
+      showToast(
+        "This machine is already fully funded"
+      );
+
+      return;
+
+    }
 
     const amountRaw =
       ethers.parseUnits(
