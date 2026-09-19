@@ -12,7 +12,7 @@ console.log("Supabase client:", supabaseClient);
 const API_BASE_URL = "https://machinecreditapi-uz4bcv6i.b4a.run/api";
 
 const MACHINECREDIT_ADDRESS =
-  "0xA1c35dF0eE85b7944c65de541D796a3C76700ba7";
+  "0x8C48C922907f12Bc44A1eeA4093589C72a1dCD72";
 
 const USDT_ADDRESS =
   "0x75edC9335175Fc0552D51D48439F229c10420fe3";
@@ -1891,19 +1891,103 @@ async function switchWallet() {
 
     }
 
+
+    /*
+      Buka permission/account selector MetaMask.
+      User bisa memilih wallet lain yang ingin
+      dihubungkan ke website.
+    */
+
+    await window.ethereum.request({
+
+      method:
+        "wallet_requestPermissions",
+
+      params: [
+
+        {
+          eth_accounts: {}
+        }
+
+      ]
+
+    });
+
+
+    /*
+      Pastikan tetap di BOT Chain Testnet.
+    */
+
     await ensureBotChain();
 
 
+    /*
+      Ambil account TERBARU dari MetaMask.
+      Jangan menggunakan signer lama.
+    */
+
+    const accounts =
+      await window.ethereum.request({
+
+        method:
+          "eth_accounts"
+
+      });
+
+
+    if (
+      !accounts ||
+      accounts.length === 0
+    ) {
+
+      disconnectWallet();
+
+      return;
+
+    }
+
+
+    const newAddress =
+      accounts[0];
+
+
+    /*
+      Buat provider + signer baru
+      berdasarkan account terbaru.
+    */
+
+    provider =
+      new ethers.BrowserProvider(
+        window.ethereum
+      );
+
+
     signer =
-      await provider.getSigner();
+      await provider.getSigner(
+        newAddress
+      );
 
 
     walletAddress =
-      await signer.getAddress();
+      newAddress;
 
 
     connected =
       true;
+
+
+    /*
+      Update seluruh state frontend
+      berdasarkan wallet baru.
+    */
+
+    userRole = null;
+
+    eventsContract?.removeAllListeners();
+
+    eventsContract = null;
+
+    notifications = [];
 
 
     updateWalletUI(
@@ -1915,11 +1999,15 @@ async function switchWallet() {
       true
     );
 
+
     setupOnchainEventListeners();
 
     await catchUpMissedEvents();
 
     await loadPortfolio();
+
+
+    hideWalletMenu();
 
 
     showToast(
@@ -1931,6 +2019,13 @@ async function switchWallet() {
       )}`
     );
 
+
+    console.log(
+      "Switched wallet:",
+      walletAddress
+    );
+
+
   } catch (error) {
 
     console.error(
@@ -1940,16 +2035,23 @@ async function switchWallet() {
 
 
     if (
-      error?.code !== 4001
+      error?.code === 4001
     ) {
 
       showToast(
-        error?.shortMessage ||
-        error?.message ||
-        "Failed to switch wallet"
+        "Wallet switch cancelled"
       );
 
+      return;
+
     }
+
+
+    showToast(
+      error?.shortMessage ||
+      error?.message ||
+      "Failed to switch wallet"
+    );
 
   }
 
