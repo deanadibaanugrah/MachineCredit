@@ -9,9 +9,9 @@ const supabaseClient = window.supabase.createClient(
 
 console.log("Supabase client:", supabaseClient);
 
-// const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "http://localhost:5000/api";
 
-const API_BASE_URL = "https://machinecreditapi-ifrvwyy3.b4a.run/api";
+// const API_BASE_URL = "https://machinecreditapi-ifrvwyy3.b4a.run/api";
 
 const MACHINECREDIT_ADDRESS =
   "0x8C48C922907f12Bc44A1eeA4093589C72a1dCD72";
@@ -585,13 +585,13 @@ function renderBlockchainMachines(machineList) {
     card.dataset.machineId =
       machine.machineId;
 
-    /*
-      Untuk sementara gunakan fallback image.
-      Kita pisahkan dulu logic image dari
-      proses rendering card.
-    */
-
     const image =
+      getMachineImage(
+        category,
+        machine.machineId
+      );
+
+    const fallbackImage =
       getMachineImageFallback(category);
 
     card.innerHTML = `
@@ -601,6 +601,7 @@ function renderBlockchainMachines(machineList) {
         <img
           src="${image}"
           alt="${escapeHTML(machine.machineId)}"
+          onerror="this.onerror=null;this.src='${fallbackImage}';"
         >
 
         <div class="machine-status ${
