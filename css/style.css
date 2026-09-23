@@ -2178,6 +2178,7 @@ body.app-mode .app-nav-right{display:flex}
 }
 
 .chart-label{color:#7b8a9d;font-size:9px;text-transform:uppercase}
+.chart-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:#fff4e0;color:#b26a00;font-size:8px;font-weight:700;letter-spacing:.04em;vertical-align:middle;cursor:help}
 .chart-value{font-size:12px;font-weight:750}
 .fake-chart{width:100%;height:170px;margin-top:12px}
 
