@@ -149,6 +149,21 @@ Deployment settings (for source verification): Solidity `0.8.34`, EVM version `c
 
 ---
 
+## Deployment
+
+MachineCredit is deployed on both BOT Chain networks:
+
+| Network | Chain ID | MachineCredit contract | USDT token |
+|---|---|---|---|
+| **BOT Chain Testnet** | 968 | [`0xe669BC1281F59ad94E36e850736E5B0075C16e39`](https://scan.bohr.life/address/0xe669BC1281F59ad94E36e850736E5B0075C16e39) | [`0x75edC9335175Fc0552D51D48439F229c10420fe3`](https://scan.bohr.life/address/0x75edC9335175Fc0552D51D48439F229c10420fe3) |
+| **BOT Chain Mainnet** | 677 | [`0x14f9b029Ab79307B8119163E8EFc51D68919E7c1`](https://scan.botchain.ai/address/0x14f9b029Ab79307B8119163E8EFc51D68919E7c1) | [`0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C`](https://scan.botchain.ai/address/0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C) |
+
+The live app at https://www.machinecredit.my.id uses the **mainnet** contract.
+
+> **Note:** the testnet contract is an earlier version that we used to build and test the full financing flow. It has the same investment, revenue split, withdrawal, repayment and principal claim logic, but the USDT address is hardcoded instead of passed to a constructor, and it has no company whitelist. The mainnet contract matches the current [`MachineCredit.sol`](backend/smartcontract-machinecredit/MachineCredit.sol) in this repo.
+
+---
+
 ## Testing guide for judges
 
 ### 1. Set up your wallet
