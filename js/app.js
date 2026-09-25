@@ -11,7 +11,7 @@ console.log("Supabase client:", supabaseClient);
 
 // const API_BASE_URL = "http://localhost:5000/api";
 
-const API_BASE_URL = "https://machinecredit-production.up.railway.app/api";
+const API_BASE_URL = "https://incredible-victory-production-c40b.up.railway.app/api";
 
 /* =========================================================
    NETWORK CONFIG
