@@ -71,15 +71,11 @@ button{font:inherit}
   letter-spacing:-.035em;
 }
 
-.brand-mark{
-  width:31px;
-  height:31px;
-  border-radius:9px;
-  background:var(--blue);
-  display:grid;
-  place-items:center;
-  color:#fff;
-  font-weight:900;
+.brand-logo{
+  width:34px;
+  height:34px;
+  object-fit:contain;
+  flex-shrink:0;
 }
 
 .nav-links{
@@ -1641,10 +1637,9 @@ body.app-mode .app-nav-right{display:flex}
   white-space:nowrap;
 }
 
-.app-brand .brand-mark{
-  width:30px;
-  height:30px;
-  border-radius:9px;
+.app-brand .brand-logo{
+  width:32px;
+  height:32px;
 }
 
 .app-tabs{
