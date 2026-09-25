@@ -35,14 +35,13 @@ const NETWORKS = {
     chainId: 677,
     rpcUrl: "https://rpc.botchain.ai",
     explorerUrl: "https://scan.botchain.ai",
-    // Isi setelah MachineCredit di-deploy ke mainnet
-    machineCreditAddress: "",
+    machineCreditAddress: "0x14f9b029Ab79307B8119163E8EFc51D68919E7c1",
     usdtAddress: "0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C"
   }
 
 };
 
-const ACTIVE_NETWORK = "testnet";
+const ACTIVE_NETWORK = "mainnet";
 
 const NETWORK = NETWORKS[ACTIVE_NETWORK];
 
