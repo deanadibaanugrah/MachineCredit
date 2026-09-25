@@ -5195,7 +5195,7 @@ function applyNetworkLinks() {
 
   if (footerExplorer) {
     footerExplorer.href =
-      `${EXPLORER_URL}/address/${MACHINECREDIT_ADDRESS}`;
+      `${EXPLORER_URL}/`;
   }
 
 }
