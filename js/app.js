@@ -5157,34 +5157,8 @@ function setupScrollReveal() {
 }
 
 /* =========================================================
-   NETWORK BANNER & LINKS
+   NETWORK LINKS
    ========================================================= */
-
-function renderNetworkBanner() {
-
-  // Hanya di app (tempat transaksi terjadi)
-  if (
-    !document.body.classList.contains(
-      "app-page"
-    )
-  ) {
-    return;
-  }
-
-  const banner =
-    document.createElement("div");
-
-  banner.className =
-    `network-banner network-banner-${ACTIVE_NETWORK}`;
-
-  banner.textContent =
-    ACTIVE_NETWORK === "mainnet"
-      ? `Hackathon MVP on ${NETWORK.chainName} · Unaudited smart contract · Use small amounts only`
-      : `Hackathon MVP on ${NETWORK.chainName} · Test tokens only`;
-
-  document.body.prepend(banner);
-
-}
 
 function applyNetworkLinks() {
 
@@ -5207,8 +5181,6 @@ function applyNetworkLinks() {
 document.addEventListener(
   "DOMContentLoaded",
   async () => {
-
-    renderNetworkBanner();
 
     applyNetworkLinks();
 
