@@ -13,16 +13,52 @@ console.log("Supabase client:", supabaseClient);
 
 const API_BASE_URL = "https://machinecredit-production.up.railway.app/api";
 
-const MACHINECREDIT_ADDRESS =
-  "0xe669BC1281F59ad94E36e850736E5B0075C16e39";
+/* =========================================================
+   NETWORK CONFIG
+   Ganti ACTIVE_NETWORK untuk pindah testnet <-> mainnet.
+   Pastikan env backend di Railway juga ikut diganti.
+   ========================================================= */
 
-const USDT_ADDRESS =
-  "0x75edC9335175Fc0552D51D48439F229c10420fe3";
+const NETWORKS = {
 
-const BOT_CHAIN_ID = 968;
-const BOT_CHAIN_HEX = "0x3C8";
-const EXPLORER_URL = "https://scan.bohr.life";
-const BOT_RPC_URL = "https://rpc.bohr.life";
+  testnet: {
+    chainName: "BOT Chain Testnet",
+    chainId: 968,
+    rpcUrl: "https://rpc.bohr.life",
+    explorerUrl: "https://scan.bohr.life",
+    machineCreditAddress: "0xe669BC1281F59ad94E36e850736E5B0075C16e39",
+    usdtAddress: "0x75edC9335175Fc0552D51D48439F229c10420fe3"
+  },
+
+  mainnet: {
+    chainName: "BOT Chain Mainnet",
+    chainId: 677,
+    rpcUrl: "https://rpc.botchain.ai",
+    explorerUrl: "https://scan.botchain.ai",
+    // Isi setelah MachineCredit di-deploy ke mainnet
+    machineCreditAddress: "",
+    usdtAddress: "0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C"
+  }
+
+};
+
+const ACTIVE_NETWORK = "testnet";
+
+const NETWORK = NETWORKS[ACTIVE_NETWORK];
+
+if (!NETWORK.machineCreditAddress) {
+  console.error(
+    `MachineCredit address for ${NETWORK.chainName} is not set`
+  );
+}
+
+const MACHINECREDIT_ADDRESS = NETWORK.machineCreditAddress;
+const USDT_ADDRESS = NETWORK.usdtAddress;
+
+const BOT_CHAIN_ID = NETWORK.chainId;
+const BOT_CHAIN_HEX = `0x${NETWORK.chainId.toString(16)}`;
+const EXPLORER_URL = NETWORK.explorerUrl;
+const BOT_RPC_URL = NETWORK.rpcUrl;
 
 const readOnlyProvider =
   new ethers.JsonRpcProvider(BOT_RPC_URL);
@@ -115,14 +151,14 @@ let selectedMachineImageFile = null;
 
 function getSyncBlockKey(address) {
 
-  return `machinecredit_lastblock_${String(address).toLowerCase()}`;
+  return `machinecredit_lastblock_${BOT_CHAIN_ID}_${String(address).toLowerCase()}`;
 
 }
 
 
 function getProcessedEventsKey(address) {
 
-  return `machinecredit_processed_${String(address).toLowerCase()}`;
+  return `machinecredit_processed_${BOT_CHAIN_ID}_${String(address).toLowerCase()}`;
 
 }
 
@@ -571,12 +607,24 @@ function getMachineCategory(name) {
 }
 
 
-function getMachineImage(category, machineId) {
+/*
+  Path gambar di Supabase: <kontrak>/<id onchain>/image
+  Unik per deployment & per network, jadi gambar testnet,
+  mainnet, dan kontrak lama tidak saling bertabrakan.
+*/
+function getMachineImagePath(onchainId) {
 
-  if (machineId) {
+  return `${MACHINECREDIT_ADDRESS.toLowerCase()}/${onchainId}/image`;
+
+}
+
+
+function getMachineImage(category, onchainId) {
+
+  if (onchainId) {
 
     const filePath =
-      `${machineId}/image`;
+      getMachineImagePath(onchainId);
 
     const {
       data
@@ -883,7 +931,7 @@ function renderBlockchainMachines(machineList) {
     const image =
       getMachineImage(
         category,
-        machine.machineId
+        machine.id
       );
 
     const fallbackImage =
@@ -2285,7 +2333,7 @@ async function ensureBotChain() {
               BOT_CHAIN_HEX,
 
             chainName:
-              "BOT Chain Testnet",
+              NETWORK.chainName,
 
             nativeCurrency: {
 
@@ -2301,7 +2349,7 @@ async function ensureBotChain() {
             },
 
             rpcUrls: [
-              "https://rpc.bohr.life"
+              BOT_RPC_URL
             ],
 
             blockExplorerUrls: [
@@ -2446,7 +2494,7 @@ async function switchWallet() {
 
 
     /*
-      Pastikan tetap di BOT Chain Testnet.
+      Pastikan tetap di BOT Chain (sesuai ACTIVE_NETWORK).
     */
 
     await ensureBotChain();
@@ -3092,6 +3140,39 @@ function handleMachineImageSelected(input) {
     return;
   }
 
+  // Sama dengan batas bucket "machines" di Supabase
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+  const ALLOWED_IMAGE_TYPES = [
+    "image/png",
+    "image/jpeg",
+    "image/webp"
+  ];
+
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+
+    showToast(
+      "Image must be PNG, JPG, or WebP"
+    );
+
+    input.value = "";
+
+    return;
+
+  }
+
+  if (file.size > MAX_IMAGE_BYTES) {
+
+    showToast(
+      "Image must be 5 MB or smaller"
+    );
+
+    input.value = "";
+
+    return;
+
+  }
+
   selectedMachineImageFile = file;
 
   const reader =
@@ -3350,7 +3431,8 @@ async function registerMachine(
     );
 
 
-    await tx.wait();
+    const receipt =
+      await tx.wait();
 
 
         showTransactionToast(
@@ -3359,7 +3441,34 @@ async function registerMachine(
     );
 
 
-    if (selectedMachineImageFile) {
+    /*
+      Ambil id onchain dari event MachineRegistered
+      untuk path gambar di Supabase.
+    */
+
+    let onchainId = null;
+
+    for (const log of receipt.logs) {
+
+      try {
+
+        const parsed =
+          contract.interface.parseLog(log);
+
+        if (parsed?.name === "MachineRegistered") {
+          onchainId =
+            parsed.args.machineId.toString();
+          break;
+        }
+
+      } catch {
+        // log dari kontrak lain, abaikan
+      }
+
+    }
+
+
+    if (selectedMachineImageFile && onchainId) {
 
   try {
 
@@ -3367,7 +3476,7 @@ async function registerMachine(
       selectedMachineImageFile;
 
     const filePath =
-      `${id}/image`;
+      getMachineImagePath(onchainId);
 
     const { error: uploadError } =
       await supabaseClient
@@ -3438,6 +3547,19 @@ async function registerMachine(
 
       showToast(
         "Transaction cancelled"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      error?.reason === "Company not approved"
+    ) {
+
+      showToast(
+        "This wallet is not an approved company yet. Contact the admin."
       );
 
       return;
@@ -5036,12 +5158,60 @@ function setupScrollReveal() {
 }
 
 /* =========================================================
+   NETWORK BANNER & LINKS
+   ========================================================= */
+
+function renderNetworkBanner() {
+
+  // Hanya di app (tempat transaksi terjadi)
+  if (
+    !document.body.classList.contains(
+      "app-page"
+    )
+  ) {
+    return;
+  }
+
+  const banner =
+    document.createElement("div");
+
+  banner.className =
+    `network-banner network-banner-${ACTIVE_NETWORK}`;
+
+  banner.textContent =
+    ACTIVE_NETWORK === "mainnet"
+      ? `Hackathon MVP on ${NETWORK.chainName} · Unaudited smart contract · Use small amounts only`
+      : `Hackathon MVP on ${NETWORK.chainName} · Test tokens only`;
+
+  document.body.prepend(banner);
+
+}
+
+function applyNetworkLinks() {
+
+  const footerExplorer =
+    document.getElementById(
+      "footerExplorerLink"
+    );
+
+  if (footerExplorer) {
+    footerExplorer.href =
+      `${EXPLORER_URL}/address/${MACHINECREDIT_ADDRESS}`;
+  }
+
+}
+
+/* =========================================================
    INITIALIZATION
    ========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
   async () => {
+
+    renderNetworkBanner();
+
+    applyNetworkLinks();
 
     setupWalletListeners();
 

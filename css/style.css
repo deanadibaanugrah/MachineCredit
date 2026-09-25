@@ -3626,3 +3626,24 @@ body.app-mode .app-nav-right{display:flex}
   color: #94a3b8;
   cursor: not-allowed;
 }
+/* =========================================================
+   NETWORK BANNER
+   ========================================================= */
+
+.network-banner{
+  padding:7px 16px;
+  font-size:12px;
+  font-weight:600;
+  text-align:center;
+  line-height:1.4;
+}
+
+.network-banner-mainnet{
+  background:#fff4e0;
+  color:#8a5200;
+}
+
+.network-banner-testnet{
+  background:#eef4ff;
+  color:#1a4fb8;
+}

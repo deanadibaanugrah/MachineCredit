@@ -10,7 +10,10 @@ const FINANCING_STATUS_LABEL = ["Open", "Completed", "Defaulted"];
 const THIRTY_DAYS_SECONDS = 30 * 24 * 60 * 60;
 const REFRESH_INTERVAL_MS = 20000; // hitung ulang tiap 20 detik
 
+// Testnet : https://scan.bohr.life/api/v2
+// Mainnet : https://scan.botchain.ai/api/v2
 const BLOCKSCOUT_API_URL =
+  process.env.BLOCKSCOUT_API_URL ||
   "https://scan.bohr.life/api/v2";
 
 const REVENUE_DEPOSITED_TOPIC =

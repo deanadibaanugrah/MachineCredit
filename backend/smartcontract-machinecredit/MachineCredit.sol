@@ -35,14 +35,58 @@ contract MachineCredit {
     // CONFIG
     // =========================================================
 
-    // BOT Chain Testnet USDT
-    address public constant USDT =
-        0x75edC9335175Fc0552D51D48439F229c10420fe3;
+    // Alamat USDT di-set sekali saat deploy, sehingga source
+    // yang sama bisa dipakai di testnet maupun mainnet.
+    //
+    // BOT Chain Testnet : 0x75edC9335175Fc0552D51D48439F229c10420fe3
+    // BOT Chain Mainnet : 0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C
+    address public immutable USDT;
 
     uint256 public constant USDT_DECIMALS = 6;
 
     // Precision untuk per-share accounting
     uint256 private constant PRECISION = 1e18;
+
+
+    // =========================================================
+    // ADMIN & COMPANY WHITELIST
+    // =========================================================
+    //
+    // Hanya company yang sudah di-approve admin yang bisa
+    // registerMachine(). Mencegah mesin palsu didaftarkan
+    // orang lain saat kontrak live di mainnet.
+    // =========================================================
+
+    address public admin;
+
+    mapping(address => bool) public approvedCompany;
+
+
+    constructor(
+        address _usdt
+    ) {
+
+        require(
+            _usdt != address(0),
+            "Invalid USDT address"
+        );
+
+        USDT = _usdt;
+
+        admin = msg.sender;
+
+        approvedCompany[msg.sender] = true;
+
+        emit AdminTransferred(
+            address(0),
+            msg.sender
+        );
+
+        emit CompanyApprovalUpdated(
+            msg.sender,
+            true
+        );
+    }
 
 
     // =========================================================
@@ -216,6 +260,16 @@ contract MachineCredit {
         uint256 amount
     );
 
+    event AdminTransferred(
+        address indexed previousAdmin,
+        address indexed newAdmin
+    );
+
+    event CompanyApprovalUpdated(
+        address indexed company,
+        bool approved
+    );
+
 
     // =========================================================
     // MODIFIER
@@ -232,6 +286,71 @@ contract MachineCredit {
         _;
     }
 
+    modifier onlyAdmin() {
+        require(
+            msg.sender == admin,
+            "Not admin"
+        );
+
+        _;
+    }
+
+    modifier onlyApprovedCompany() {
+        require(
+            approvedCompany[msg.sender],
+            "Company not approved"
+        );
+
+        _;
+    }
+
+
+    // =========================================================
+    // ADMIN FUNCTIONS
+    // =========================================================
+
+    function setCompanyApproval(
+        address _company,
+        bool _approved
+    )
+        external
+        onlyAdmin
+    {
+
+        require(
+            _company != address(0),
+            "Invalid company"
+        );
+
+        approvedCompany[_company] = _approved;
+
+        emit CompanyApprovalUpdated(
+            _company,
+            _approved
+        );
+    }
+
+
+    function transferAdmin(
+        address _newAdmin
+    )
+        external
+        onlyAdmin
+    {
+
+        require(
+            _newAdmin != address(0),
+            "Invalid admin"
+        );
+
+        emit AdminTransferred(
+            admin,
+            _newAdmin
+        );
+
+        admin = _newAdmin;
+    }
+
 
     // =========================================================
     // REGISTER MACHINE
@@ -244,7 +363,10 @@ contract MachineCredit {
         uint256 _monthlyRevenue,
         uint256 _fundingTarget,
         uint256 _revenueSharePercent
-    ) external {
+    )
+        external
+        onlyApprovedCompany
+    {
 
         require(
             _performanceScore <= 100,
@@ -344,14 +466,10 @@ contract MachineCredit {
         }
 
         // Transfer USDT dari lender
-        bool success = IERC20(USDT).transferFrom(
+        _safeTransferFrom(
             msg.sender,
             address(this),
-            _amount
-        );
-
-        require(
-            success,
+            _amount,
             "USDT transfer failed"
         );
 
@@ -427,14 +545,9 @@ contract MachineCredit {
 
         totalWithdrawn[_machineId] += available;
 
-        bool success =
-            IERC20(USDT).transfer(
-                machine.owner,
-                available
-            );
-
-        require(
-            success,
+        _safeTransfer(
+            machine.owner,
+            available,
             "Withdraw failed"
         );
 
@@ -492,14 +605,10 @@ contract MachineCredit {
 
 
         // Ambil USDT dari company
-        bool success = IERC20(USDT).transferFrom(
+        _safeTransferFrom(
             msg.sender,
             address(this),
-            _amount
-        );
-
-        require(
-            success,
+            _amount,
             "USDT transfer failed"
         );
 
@@ -528,14 +637,9 @@ contract MachineCredit {
 
         if (companyShare > 0) {
 
-            bool companyPaid =
-                IERC20(USDT).transfer(
-                    machine.owner,
-                    companyShare
-                );
-
-            require(
-                companyPaid,
+            _safeTransfer(
+                machine.owner,
+                companyShare,
                 "Company payout failed"
             );
         }
@@ -614,14 +718,9 @@ contract MachineCredit {
             investor.totalEarned += pending;
 
 
-            bool success =
-                IERC20(USDT).transfer(
-                    _lender,
-                    pending
-                );
-
-            require(
-                success,
+            _safeTransfer(
+                _lender,
+                pending,
                 "Lender payout failed"
             );
 
@@ -707,15 +806,10 @@ contract MachineCredit {
         financingStatus[_machineId] = status;
 
 
-        bool success =
-            IERC20(USDT).transferFrom(
-                msg.sender,
-                address(this),
-                _amount
-            );
-
-        require(
-            success,
+        _safeTransferFrom(
+            msg.sender,
+            address(this),
+            _amount,
             "USDT transfer failed"
         );
 
@@ -765,14 +859,9 @@ contract MachineCredit {
         principalClaimed[_machineId][msg.sender]
             += claimable;
 
-        bool success =
-            IERC20(USDT).transfer(
-                msg.sender,
-                claimable
-            );
-
-        require(
-            success,
+        _safeTransfer(
+            msg.sender,
+            claimable,
             "Principal payout failed"
         );
 
@@ -980,5 +1069,61 @@ contract MachineCredit {
                 _lender
             ) -
             principalClaimed[_machineId][_lender];
+    }
+
+
+    // =========================================================
+    // SAFE TOKEN TRANSFER
+    // =========================================================
+    //
+    // Mendukung token yang return bool maupun yang tidak
+    // return apa-apa (beberapa implementasi USDT).
+    // =========================================================
+
+    function _safeTransfer(
+        address _to,
+        uint256 _amount,
+        string memory _errorMessage
+    ) internal {
+
+        (bool success, bytes memory data) =
+            USDT.call(
+                abi.encodeWithSelector(
+                    IERC20.transfer.selector,
+                    _to,
+                    _amount
+                )
+            );
+
+        require(
+            success &&
+            (data.length == 0 || abi.decode(data, (bool))),
+            _errorMessage
+        );
+    }
+
+
+    function _safeTransferFrom(
+        address _from,
+        address _to,
+        uint256 _amount,
+        string memory _errorMessage
+    ) internal {
+
+        (bool success, bytes memory data) =
+            USDT.call(
+                abi.encodeWithSelector(
+                    IERC20.transferFrom.selector,
+                    _from,
+                    _to,
+                    _amount
+                )
+            );
+
+        require(
+            success &&
+            (data.length == 0 || abi.decode(data, (bool))),
+            _errorMessage
+        );
     }
 }
