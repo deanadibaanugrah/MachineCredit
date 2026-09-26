@@ -5169,7 +5169,7 @@ function applyNetworkLinks() {
 
   if (footerExplorer) {
     footerExplorer.href =
-      `${EXPLORER_URL}/`;
+      `${EXPLORER_URL}/address/${MACHINECREDIT_ADDRESS}`;
   }
 
 }
